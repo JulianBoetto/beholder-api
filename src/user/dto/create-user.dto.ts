@@ -20,5 +20,11 @@ export class CreateUserDto extends User {
     password: string;
 
     @IsString()
-    name: string;
+    apiUrl: string;
+
+    @IsString()
+    accessKey: string;
+
+    @IsString()
+    secretKey: string;
 }

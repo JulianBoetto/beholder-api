@@ -3,7 +3,7 @@ import { UserService } from 'src/user/user.service';
 import { UnauthorizedError } from './errors/unauthorized.error';
 import * as bcrypt from "bcrypt";
 import { User } from 'src/user/entities/user.entity';
-import { UserPayload } from './models/userPayload';
+import { UserPayload } from './models/UserPayload';
 import { JwtService } from '@nestjs/jwt';
 import { UserToken } from './models/UserToken';
 

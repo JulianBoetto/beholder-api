@@ -18,13 +18,4 @@ export class CreateUserDto extends User {
         message: 'password too weak',
     })
     password: string;
-
-    @IsString()
-    apiUrl: string;
-
-    @IsString()
-    accessKey: string;
-
-    @IsString()
-    secretKey: string;
 }

@@ -14,13 +14,12 @@ export class UserService {
       password: await bcrypt.hash(createUserDto.password, 10),
     }
 
-    return data;
-    // const createrUser = await this.prisma.user.create({ data })
+    const createrUser = await this.prisma.user.create({ data })
 
-    // return {
-    //   ...createrUser,
-    //   password: undefined
-    // };
+    return {
+      ...createrUser,
+      password: undefined
+    };
   }
 
   findByEmail(email: string) {

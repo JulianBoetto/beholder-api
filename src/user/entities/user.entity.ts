@@ -14,6 +14,4 @@ export class User {
     telegramBot: string;
     telegramChat: string;
     pushToken: string;
-    //   createdAt DateTime @default(now())
-    //   updatedAt DateTime @updatedAt
 }

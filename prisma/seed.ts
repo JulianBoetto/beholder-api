@@ -1,9 +1,12 @@
 import { PrismaClient } from '@prisma/client'
 import * as bcrypt from "bcrypt"
+import { encryptData } from '../src/utils/encrypt'
 
 const prisma = new PrismaClient()
 async function main() {
     const password = await bcrypt.hash(process.env.ACCESS_PASSWORD, 10)
+    const secretKey = await encryptData(process.env.API_SECRET_BINANCE)
+    const twilioToken = await encryptData(process.env.TWILIO_TOKEN)
     const julian = await prisma.user.upsert({
         where: { email: 'julib_8724@hotmail.com' },
         update: {},
@@ -12,18 +15,18 @@ async function main() {
             password,
             apiUrl: "https://testnet.binance.vision/api",
             accessKey: process.env.API_KEY_BINANCE,
-            secretKey: process.env.API_SECRET_BINANCE,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            secretKey,
             streamUrl: "wss://testnet.binance.vision/ws",
             phone: process.env.PHONE,
             sendGridKey: process.env.SENDGRID_KEY,
             twilioSid: process.env.TWILIO_SID,
-            twilioToken: process.env.TWILIO_TOKEN,
+            twilioToken,
             twilioPhone: process.env.TWILIO_PHONE,
             telegramBot: process.env.TELEGRAM_BOT,
             telegramChat: process.env.TELEGRAM_CHAT,
-            pushToken: ""
+            pushToken: "",
+            createdAt: new Date(),
+            updatedAt: new Date()
         },
     })
     console.log({ julian })

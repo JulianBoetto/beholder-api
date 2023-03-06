@@ -13,11 +13,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             secretOrKey: process.env.JWT_SECRET,
         });
     }
-
+    
+    
     async validate(payload: UserPayload): Promise<UserFromJwt> {
         return {
             id: payload.sub,
             email: payload.email
         };
+    }
+    
+    blacklist: Array<string> = [];
+
+    async logout() {
+        
     }
 }

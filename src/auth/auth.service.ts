@@ -20,8 +20,12 @@ export class AuthService {
             email: user.email
         };
 
+        const { pushToken } = await this.userService.findByEmail(user.email)
+        const access_token = this.jwtService.sign(payload)
+
         return {
-            access_token: this.jwtService.sign(payload),
+            access_token,
+            pushToken,
         };
     }
 

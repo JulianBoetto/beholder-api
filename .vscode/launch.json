@@ -8,18 +8,21 @@
             "args": [
                 "${workspaceFolder}/src/main.ts"
             ],
+            "runtimeExecutable": "npm",
             "runtimeArgs": [
+                "run-script",
+                "start:dev",
                 "--nolazy",
                 "-r",
                 "ts-node/register",
                 "-r",
                 "tsconfig-paths/register"
             ],
+            "restart": true,
             "sourceMaps": true,
             "envFile": "${workspaceFolder}/.env",
             "cwd": "${workspaceRoot}",
             "console": "integratedTerminal",
-            "protocol": "inspector",
         }
     ]
 }

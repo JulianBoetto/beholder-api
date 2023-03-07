@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -21,7 +21,7 @@ export class UserService {
   ) {
     const user = await this.findByEmail(email);
     if(!user) {
-      throw new Error("User does not exists.")
+      throw new BadRequestException("User does not exist.")
     }
     const updatedUser = await this.prisma.user.update({
       where: {email}, data

@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { UserService } from 'src/user/user.service';
-import { UnauthorizedError } from './errors/unauthorized.error';
-import * as bcrypt from "bcrypt";
-import { User } from 'src/user/entities/user.entity';
-import { UserPayload } from './models/UserPayload';
 import { JwtService } from '@nestjs/jwt';
-import { UserToken } from './models/UserToken';
-import { encryptData } from 'src/utils/encrypt';
+import * as bcrypt from "bcrypt";
 import { PrismaService } from 'src/prisma/prisma.service';
+import { User } from 'src/user/entities/user.entity';
+import { UserService } from 'src/user/user.service';
+import { encryptData } from 'src/utils/encrypt';
+import { CreateAuthDto } from './dto/create-auth-dto';
+import { UnauthorizedError } from './errors/unauthorized.error';
+import { UserPayload } from './models/UserPayload';
+import { UserToken } from './models/UserToken';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,10 @@ export class AuthService {
         private readonly prisma: PrismaService
     ) { }
 
+    findByUserId(userId: number) {  
+        return this.prisma.auth.findUnique({ where: { userId } });
+    }
+
     async login(user: User): Promise<UserToken> {
         const payload: UserPayload = {
             sub: user.id,
@@ -24,20 +29,20 @@ export class AuthService {
         };
 
         const { pushToken } = await this.userService.findByEmail(user.email)
-        const access_token = await this.jwtService.signAsync(payload, {
+        const accessToken = await this.jwtService.signAsync(payload, {
             secret: process.env.JWT_ACCESS_SECRET,
             expiresIn: "15m"
         })
-        const refresh_token = await this.jwtService.signAsync(payload, {
+        const refreshToken = await this.jwtService.signAsync(payload, {
             secret: process.env.JWT_REFRESH_SECRET,
             expiresIn: "24h"
         })
 
-        await this.updateRefreshToken(user.id, refresh_token);
+        await this.updateRefreshToken({ userId: user.id, refreshToken });
 
         return {
-            access_token,
-            refresh_token,
+            accessToken,
+            refreshToken,
             pushToken,
         };
     }
@@ -65,10 +70,11 @@ export class AuthService {
         return this.userService.update(userId, { refreshToken: null });
     }
 
-    async updateRefreshToken(userId: number, refreshToken: string) {
-        const encryptRefreshToken = await encryptData(refreshToken);
-        await this.prisma.auth.create({ data: { refreshToken: encryptRefreshToken, userId } });
+    async updateRefreshToken(auth: CreateAuthDto) {
+        const encryptRefreshToken = await encryptData(auth.refreshToken);
+        const authExist = await this.findByUserId(auth.userId)
+        if (authExist) {
+            await this.prisma.auth.update({ where: { userId: auth.userId }, data: { refreshToken: auth.refreshToken } })
+        } else await this.prisma.auth.create({ data: { refreshToken: encryptRefreshToken, userId: auth.userId } });
     }
-
-
 }

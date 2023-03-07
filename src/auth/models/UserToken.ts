@@ -1,5 +1,5 @@
 export interface UserToken {
-    access_token: string;
+    accessToken: string;
     pushToken: string;
-    refresh_token: string;
+    refreshToken: string;
 }

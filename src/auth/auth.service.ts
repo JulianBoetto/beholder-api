@@ -7,6 +7,7 @@ import { UserService } from 'src/user/user.service';
 import { encryptData } from 'src/utils/encrypt';
 import { CreateAuthDto } from './dto/create-auth-dto';
 import { UnauthorizedError } from './errors/unauthorized.error';
+import { UserFromJwt } from './models/UserFromJwt';
 import { UserPayload } from './models/UserPayload';
 import { UserToken } from './models/UserToken';
 
@@ -15,10 +16,10 @@ export class AuthService {
     constructor(
         private readonly userService: UserService,
         private readonly jwtService: JwtService,
-        private readonly prisma: PrismaService
+        private readonly prisma: PrismaService,
     ) { }
 
-    findByUserId(userId: number) {  
+    findByUserId(userId: number) {
         return this.prisma.auth.findUnique({ where: { userId } });
     }
 
@@ -66,8 +67,9 @@ export class AuthService {
         );
     }
 
-    async logout(userId: string) {
-        return this.userService.update(userId, { refreshToken: null });
+    async logout(req: User) {
+        await this.prisma.auth.update({ where: { userId: req.id }, data: { refreshToken: "" } })
+        return
     }
 
     async updateRefreshToken(auth: CreateAuthDto) {

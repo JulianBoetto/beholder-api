@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { PrismaModule } from 'src/prisma/prisma.module';
 import { UserModule } from 'src/user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -9,7 +10,7 @@ import { LocalStrategy } from './strategy/local.strategy';
 import { RefreshTokenStrategy } from './strategy/refreshToken.strategy';
 
 @Module({
-  imports: [UserModule, JwtModule.register({})],
+  imports: [UserModule, JwtModule.register({}), PrismaModule],
   controllers: [AuthController],
   providers: [
     AuthService,

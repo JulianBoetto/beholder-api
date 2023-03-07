@@ -6,12 +6,15 @@ import { User } from 'src/user/entities/user.entity';
 import { UserPayload } from './models/UserPayload';
 import { JwtService } from '@nestjs/jwt';
 import { UserToken } from './models/UserToken';
+import { encryptData } from 'src/utils/encrypt';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly userService: UserService,
-        private readonly jwtService: JwtService
+        private readonly jwtService: JwtService,
+        private readonly prisma: PrismaService
     ) { }
 
     async login(user: User): Promise<UserToken> {
@@ -29,8 +32,8 @@ export class AuthService {
             secret: process.env.JWT_REFRESH_SECRET,
             expiresIn: "24h"
         })
-        // await this.updateRefreshToken(`${user.id}`, refresh_token);
 
+        await this.updateRefreshToken(user.id, refresh_token);
 
         return {
             access_token,
@@ -62,11 +65,9 @@ export class AuthService {
         return this.userService.update(userId, { refreshToken: null });
     }
 
-    async updateRefreshToken(userId: string, refreshToken: string) {
-        // const hashedRefreshToken = await this.hashData(refreshToken);
-        // await this.userService.update(userId, {
-        //     refreshToken: hashedRefreshToken,
-        // });
+    async updateRefreshToken(userId: number, refreshToken: string) {
+        const encryptRefreshToken = await encryptData(refreshToken);
+        await this.prisma.auth.create({ data: { refreshToken: encryptRefreshToken, userId } });
     }
 
 

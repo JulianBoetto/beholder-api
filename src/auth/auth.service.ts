@@ -21,10 +21,20 @@ export class AuthService {
         };
 
         const { pushToken } = await this.userService.findByEmail(user.email)
-        const access_token = this.jwtService.sign(payload)
+        const access_token = await this.jwtService.signAsync(payload, {
+            secret: process.env.JWT_ACCESS_SECRET,
+            expiresIn: "15m"
+        })
+        const refresh_token = await this.jwtService.signAsync(payload, {
+            secret: process.env.JWT_REFRESH_SECRET,
+            expiresIn: "24h"
+        })
+        // await this.updateRefreshToken(`${user.id}`, refresh_token);
+
 
         return {
             access_token,
+            refresh_token,
             pushToken,
         };
     }
@@ -47,4 +57,17 @@ export class AuthService {
             'Email address or password provided is incorrect.',
         );
     }
+
+    async logout(userId: string) {
+        return this.userService.update(userId, { refreshToken: null });
+    }
+
+    async updateRefreshToken(userId: string, refreshToken: string) {
+        // const hashedRefreshToken = await this.hashData(refreshToken);
+        // await this.userService.update(userId, {
+        //     refreshToken: hashedRefreshToken,
+        // });
+    }
+
+
 }

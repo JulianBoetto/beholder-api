@@ -14,4 +14,5 @@ export class User {
     telegramBot?: string;
     telegramChat?: string;
     pushToken?: string;
+    refreshToken?: string;
 }

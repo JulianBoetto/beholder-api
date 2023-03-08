@@ -10,15 +10,14 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: process.env.JWT_ACCESS_SECRET,
+            secretOrKey: process.env.JWT_REFRESH_TOKEN_SECRET,
         });
     }
     
     
     async validate(payload: UserPayload): Promise<UserFromJwt> {
         return {
-            id: payload.sub,
-            email: payload.email
+            id: payload.sub
         };
     }
 }

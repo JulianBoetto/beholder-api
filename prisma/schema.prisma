@@ -23,15 +23,7 @@ model User {
   telegramBot  String
   telegramChat String
   pushToken    String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  auth         Auth[]
-}
-
-model Auth {
-  userId       Int @unique
   refreshToken String @db.LongText
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  user         User @relation(fields: [userId], references: [id])
 }

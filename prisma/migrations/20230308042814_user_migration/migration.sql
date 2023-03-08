@@ -15,6 +15,7 @@ CREATE TABLE `User` (
     `telegramBot` VARCHAR(191) NOT NULL,
     `telegramChat` VARCHAR(191) NOT NULL,
     `pushToken` VARCHAR(191) NOT NULL,
+    `refreshToken` LONGTEXT NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 

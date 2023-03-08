@@ -25,6 +25,7 @@ async function main() {
             telegramBot: process.env.TELEGRAM_BOT,
             telegramChat: process.env.TELEGRAM_CHAT,
             pushToken: "",
+            refreshToken: "",
             createdAt: new Date(),
             updatedAt: new Date()
         },

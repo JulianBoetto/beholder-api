@@ -1,4 +1,4 @@
 export class Auth {
     userId: number;
-    refreshToken: string;
+    refresh_token: string;
 }

@@ -1,10 +1,9 @@
-import { ForbiddenException, Injectable, Next, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from "bcrypt";
-import { PrismaService } from 'src/prisma/prisma.service';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
-import { encryptData } from 'src/utils/encrypt';
+import { decryptData, encryptData } from 'src/utils/encrypt';
 import { Auth } from './entities/auth.entity';
 import { UnauthorizedError } from './errors/unauthorized.error';
 import { UserPayload } from './models/UserPayload';
@@ -15,7 +14,6 @@ export class AuthService {
     constructor(
         private readonly userService: UserService,
         private readonly jwtService: JwtService,
-        private readonly prisma: PrismaService,
     ) { }
 
     findByUserId(userId: number) {
@@ -24,36 +22,37 @@ export class AuthService {
 
     async login(user: User): Promise<UserToken> {
         const payload: UserPayload = {
-            sub: user.id
+            sub: user.id,
+            email: user.email
         };
 
         const { pushToken } = await this.userService.findById(user.id)
-        const accessToken = await this.getAccessToken(payload)
-        const refreshToken = await this.getRefreshToken(payload)
+        const access_token = await this.getAccessToken(payload)
+        const refresh_token = await this.getRefreshToken(payload)
 
-        await this.updateRefreshToken({ userId: user.id, refreshToken });
+        await this.updateRefreshToken({ userId: user.id, refresh_token });
 
         return {
-            accessToken,
-            refreshToken,
+            access_token,
+            refresh_token,
             pushToken,
         };
     }
 
     async getAccessToken(payload: object) {
-        const accessToken = await this.jwtService.signAsync(payload, {
+        const access_token = await this.jwtService.signAsync(payload, {
             secret: process.env.JWT_ACCESS_TOKEN_SECRET,
             expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME
         })
-        return accessToken
+        return access_token
     }
 
     async getRefreshToken(payload: object) {
-        const refreshToken = await this.jwtService.signAsync(payload, {
+        const refresh_token = await this.jwtService.signAsync(payload, {
             secret: process.env.JWT_REFRESH_TOKEN_SECRET,
             expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME
         })
-        return refreshToken
+        return refresh_token
     }
 
 
@@ -85,35 +84,34 @@ export class AuthService {
     }
 
     async updateRefreshToken(auth: Auth) {
-        const encryptRefreshToken = await encryptData(auth.refreshToken);
-        const { refreshToken } = await this.findByUserId(auth.userId)
-        if (refreshToken) {
-            await this.userService.update(auth.userId, { refreshToken: auth.refreshToken })
-        } else await this.userService.create({ refreshToken: encryptRefreshToken, userId: auth.userId });
+        const encryptRefreshToken = await encryptData(auth.refresh_token);
+        return await this.userService.update(auth.userId, { refreshToken: encryptRefreshToken })
     }
 
-    async refreshTokens(userId: number, refreshToken: string) {
-        const user = await this.getUserIfRefreshTokenMatches(refreshToken, userId);
+    async refreshTokens(userId: number, refresh_token: string) {
+        const user = await this.getUserIfRefreshTokenMatches(refresh_token, userId);
         if (!user || !user.refreshToken)
             throw new UnauthorizedException();
 
+        const payload: UserPayload = {
+            sub: user.id,
+            email: user.email
+        };
 
-        // LOGIN RETURN TOKENS
-        // const tokens = await this.userService.findById(user.id);
-        // await this.updateRefreshToken(user.id, tokens.refreshToken);
-        // return tokens;
+        const pushToken = user.pushToken;
+        const access_token = await this.getAccessToken(payload);
+        const newRefreshToken = await this.getRefreshToken(payload);
+        await this.updateRefreshToken({ userId: user.id, refresh_token: newRefreshToken });
+        return {
+            access_token,
+            refresh_token: newRefreshToken,
+            pushToken
+        };
     }
 
-    async getUserIfRefreshTokenMatches(refreshToken: string, userId: number) {
+    async getUserIfRefreshTokenMatches(refresh_token: string, userId: number) {
         const user = await this.userService.findById(userId);
-
-        const isRefreshTokenMatching = await bcrypt.compare(
-            refreshToken,
-            user.refreshToken
-        );
-
-        if (isRefreshTokenMatching) {
-            return user;
-        }
+        const decryptedRefreshToken = await decryptData(user.refreshToken);
+        if (refresh_token === decryptedRefreshToken) return user
     }
 }

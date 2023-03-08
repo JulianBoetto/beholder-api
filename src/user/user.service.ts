@@ -15,14 +15,6 @@ export class UserService {
     return this.prisma.user.findFirst({ where: { id } });
   }
 
-  async create(
-    data: object
-  ) {
-    // const newUser = await this.prisma.user.create({data})
-    // return newUser;
-    console.log(data)
-  }
-
   async update(
     userId: number,
     data: object

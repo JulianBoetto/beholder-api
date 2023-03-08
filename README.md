@@ -40,3 +40,4 @@ $ npm run test:cov
 
 [x] - Login
 [x] - Logout
+[x] - Refresh token

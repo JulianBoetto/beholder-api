@@ -9,6 +9,7 @@
                 "${workspaceFolder}/src/main.ts"
             ],
             "runtimeExecutable": "npm",
+            "runtimeVersion": "19",
             "runtimeArgs": [
                 "run-script",
                 "start:dev",

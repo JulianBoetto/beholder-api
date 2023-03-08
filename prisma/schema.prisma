@@ -1,0 +1,29 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           Int @id @default(autoincrement()) 
+  email        String @unique
+  password     String
+  apiUrl       String
+  accessKey    String
+  secretKey    String
+  streamUrl    String
+  phone        String
+  sendGridKey  String
+  twilioSid    String
+  twilioToken  String
+  twilioPhone  String
+  telegramBot  String
+  telegramChat String
+  pushToken    String
+  refreshToken String @db.LongText
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

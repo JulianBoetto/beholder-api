@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  async testApi(): Promise<object> {
+    return {
+      name: "Beholder-API",
+      version: "1.0",
+      date: 2023,
+      author: "Julián Boetto"
+    };
   }
 }

@@ -6,11 +6,11 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) { }
 
   findByEmail(email: string) {
-    return this.prisma.users.findUnique({ where: { email } });
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
   findById(id: number) {
-    return this.prisma.users.findFirst({ where: { id } });
+    return this.prisma.user.findFirst({ where: { id } });
   }
 
   async update(
@@ -21,7 +21,7 @@ export class UsersService {
     if (!user) {
       throw new BadRequestException("User does not exist.")
     }
-    const updatedUser = await this.prisma.users.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id: userId }, data
     })
     return updatedUser;

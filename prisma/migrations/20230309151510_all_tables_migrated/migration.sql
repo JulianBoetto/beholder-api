@@ -1,5 +1,44 @@
 -- CreateTable
-CREATE TABLE `Orders` (
+CREATE TABLE `User` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `apiUrl` VARCHAR(191) NOT NULL,
+    `accessKey` VARCHAR(191) NOT NULL,
+    `secretKey` VARCHAR(191) NOT NULL,
+    `streamUrl` VARCHAR(191) NOT NULL,
+    `phone` VARCHAR(191) NOT NULL,
+    `sendGridKey` VARCHAR(191) NOT NULL,
+    `twilioSid` VARCHAR(191) NOT NULL,
+    `twilioToken` VARCHAR(191) NOT NULL,
+    `twilioPhone` VARCHAR(191) NOT NULL,
+    `telegramBot` VARCHAR(191) NOT NULL,
+    `telegramChat` VARCHAR(191) NOT NULL,
+    `pushToken` VARCHAR(191) NOT NULL,
+    `refreshToken` LONGTEXT NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `User_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Symbol` (
+    `symbol` VARCHAR(191) NOT NULL,
+    `basePrecision` INTEGER NOT NULL,
+    `quotePrecision` INTEGER NOT NULL,
+    `minNotional` VARCHAR(191) NOT NULL,
+    `minLotSize` VARCHAR(191) NOT NULL,
+    `isFavorite` BOOLEAN NOT NULL DEFAULT false,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Symbol_symbol_key`(`symbol`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Order` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `automationId` INTEGER NOT NULL,
     `symbol` VARCHAR(191) NOT NULL,
@@ -21,12 +60,12 @@ CREATE TABLE `Orders` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `Orders_clientOrderId_key`(`clientOrderId`),
+    UNIQUE INDEX `Order_clientOrderId_key`(`clientOrderId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Automations` (
+CREATE TABLE `Automation` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
     `symbol` VARCHAR(191) NOT NULL,
@@ -38,13 +77,13 @@ CREATE TABLE `Automations` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `Automations_name_key`(`name`),
-    UNIQUE INDEX `Automations_symbol_key`(`symbol`),
+    UNIQUE INDEX `Automation_name_key`(`name`),
+    UNIQUE INDEX `Automation_symbol_key`(`symbol`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `withdrawTemplates` (
+CREATE TABLE `withdrawTemplate` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
     `coin` VARCHAR(191) NOT NULL,
@@ -56,13 +95,13 @@ CREATE TABLE `withdrawTemplates` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `withdrawTemplates_name_key`(`name`),
-    UNIQUE INDEX `withdrawTemplates_coin_key`(`coin`),
+    UNIQUE INDEX `withdrawTemplate_name_key`(`name`),
+    UNIQUE INDEX `withdrawTemplate_coin_key`(`coin`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `OrderTemplates` (
+CREATE TABLE `OrderTemplate` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
     `symbol` VARCHAR(191) NOT NULL,
@@ -79,13 +118,13 @@ CREATE TABLE `OrderTemplates` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `OrderTemplates_name_key`(`name`),
-    UNIQUE INDEX `OrderTemplates_symbol_key`(`symbol`),
+    UNIQUE INDEX `OrderTemplate_name_key`(`name`),
+    UNIQUE INDEX `OrderTemplate_symbol_key`(`symbol`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Actions` (
+CREATE TABLE `Action` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `automationId` INTEGER NOT NULL,
     `type` VARCHAR(191) NOT NULL,
@@ -98,7 +137,7 @@ CREATE TABLE `Actions` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Grids` (
+CREATE TABLE `Grid` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `automationId` INTEGER NOT NULL,
     `orderTemplateId` INTEGER NOT NULL,
@@ -110,7 +149,7 @@ CREATE TABLE `Grids` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Monitors` (
+CREATE TABLE `Monitor` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `symbol` VARCHAR(191) NOT NULL DEFAULT '*',
     `type` VARCHAR(191) NOT NULL,
@@ -123,26 +162,26 @@ CREATE TABLE `Monitors` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `Monitors_symbol_key`(`symbol`),
-    UNIQUE INDEX `Monitors_type_key`(`type`),
-    UNIQUE INDEX `Monitors_interval_key`(`interval`),
+    UNIQUE INDEX `Monitor_symbol_key`(`symbol`),
+    UNIQUE INDEX `Monitor_type_key`(`type`),
+    UNIQUE INDEX `Monitor_interval_key`(`interval`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `Orders` ADD CONSTRAINT `Orders_automationId_fkey` FOREIGN KEY (`automationId`) REFERENCES `Automations`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Order` ADD CONSTRAINT `Order_automationId_fkey` FOREIGN KEY (`automationId`) REFERENCES `Automation`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Actions` ADD CONSTRAINT `Actions_orderTemplateId_fkey` FOREIGN KEY (`orderTemplateId`) REFERENCES `OrderTemplates`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Action` ADD CONSTRAINT `Action_orderTemplateId_fkey` FOREIGN KEY (`orderTemplateId`) REFERENCES `OrderTemplate`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Actions` ADD CONSTRAINT `Actions_withdrawTemplateId_fkey` FOREIGN KEY (`withdrawTemplateId`) REFERENCES `withdrawTemplates`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Action` ADD CONSTRAINT `Action_withdrawTemplateId_fkey` FOREIGN KEY (`withdrawTemplateId`) REFERENCES `withdrawTemplate`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Actions` ADD CONSTRAINT `Actions_automationId_fkey` FOREIGN KEY (`automationId`) REFERENCES `Automations`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Action` ADD CONSTRAINT `Action_automationId_fkey` FOREIGN KEY (`automationId`) REFERENCES `Automation`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Grids` ADD CONSTRAINT `Grids_automationId_fkey` FOREIGN KEY (`automationId`) REFERENCES `Automations`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Grid` ADD CONSTRAINT `Grid_automationId_fkey` FOREIGN KEY (`automationId`) REFERENCES `Automation`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Grids` ADD CONSTRAINT `Grids_orderTemplateId_fkey` FOREIGN KEY (`orderTemplateId`) REFERENCES `OrderTemplates`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Grid` ADD CONSTRAINT `Grid_orderTemplateId_fkey` FOREIGN KEY (`orderTemplateId`) REFERENCES `OrderTemplate`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

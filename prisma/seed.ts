@@ -7,7 +7,7 @@ async function main() {
     const password = await bcrypt.hash(process.env.ACCESS_PASSWORD, 10)
     const secretKey = await encryptData(process.env.API_SECRET_BINANCE)
     const twilioToken = await encryptData(process.env.TWILIO_TOKEN)
-    const julian = await prisma.users.upsert({
+    const julian = await prisma.user.upsert({
         where: { email: 'julib_8724@hotmail.com' },
         update: {},
         create: {
@@ -33,7 +33,7 @@ async function main() {
     console.log({ julian })
 
     const defaultSymbol = "BTCUSDT";
-    const btcusdt = await prisma.symbols.upsert({
+    const btcusdt = await prisma.symbol.upsert({
         where: { symbol: defaultSymbol },
         update: {},
         create: {

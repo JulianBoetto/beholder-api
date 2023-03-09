@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSymbolDto } from './dto/create-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
 
 @Injectable()
 export class SymbolsService {
+  constructor(private readonly prisma: PrismaService) { }
+
   create(createSymbolDto: CreateSymbolDto) {
     return 'This action syncs all symbols';
   }
 
   findAll() {
-    return `This action returns all symbols`;
+    return this.prisma.symbol.findMany();
   }
 
   findOne(symbol: string) {

@@ -7,7 +7,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Users {
+model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
   password     String
@@ -28,7 +28,7 @@ model Users {
   updatedAt    DateTime @updatedAt
 }
 
-model Symbols {
+model Symbol {
   symbol         String   @unique
   basePrecision  Int
   quotePrecision Int
@@ -39,105 +39,105 @@ model Symbols {
   updatedAt      DateTime @updatedAt
 }
 
-model Orders {
-  id            Int         @id @default(autoincrement())
+model Order {
+  id            Int        @id @default(autoincrement())
   automationId  Int
   symbol        String
-  orderId       BigInt      @db.BigInt
-  clientOrderId String      @unique
-  transactTime  BigInt      @db.BigInt
+  orderId       BigInt     @db.BigInt
+  clientOrderId String     @unique
+  transactTime  BigInt     @db.BigInt
   type          String
   side          String
   status        String
   isMaker       Boolean
   limitPrice    String
   stopPrice     String
-  avgPrice      Decimal     @db.Decimal(18, 8)
+  avgPrice      Decimal    @db.Decimal(18, 8)
   commission    String
-  net           Decimal     @db.Decimal(18, 8)
+  net           Decimal    @db.Decimal(18, 8)
   quantity      String
   icebergQty    String
   obs           String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  automation    Automations @relation(fields: [automationId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  automation    Automation @relation(fields: [automationId], references: [id])
 }
 
-model Automations {
-  id         Int       @id @default(autoincrement())
-  name       String    @unique
-  symbol     String    @unique
+model Automation {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  symbol     String   @unique
   indexes    String
   conditions String
   schedule   String
-  isActive   Boolean   @default(false)
-  logs       Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  Orders     Orders[]
-  Actions    Actions[]
-  Grids      Grids[]
+  isActive   Boolean  @default(false)
+  logs       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  order      Order[]
+  action     Action[]
+  grid       Grid[]
 }
 
-model withdrawTemplates {
-  id               Int       @id @default(autoincrement())
-  name             String    @unique
-  coin             String    @unique
+model withdrawTemplate {
+  id               Int      @id @default(autoincrement())
+  name             String   @unique
+  coin             String   @unique
   amount           String
-  amountMultiplier Decimal   @db.Decimal(10, 2)
+  amountMultiplier Decimal  @db.Decimal(10, 2)
   address          String
   addressTag       String
   network          String
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  Actions          Actions[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  action           Action[]
 }
 
-model OrderTemplates {
-  id                   Int       @id @default(autoincrement())
-  name                 String    @unique
-  symbol               String    @unique
+model OrderTemplate {
+  id                   Int      @id @default(autoincrement())
+  name                 String   @unique
+  symbol               String   @unique
   type                 String
   side                 String
   limitPrice           String
-  limitPriceMultiplier Decimal   @db.Decimal(10, 2)
+  limitPriceMultiplier Decimal  @db.Decimal(10, 2)
   stopPrice            String
-  stopPriceMultiplier  Decimal   @db.Decimal(10, 2)
+  stopPriceMultiplier  Decimal  @db.Decimal(10, 2)
   quantity             String
-  quantityMultiplier   Decimal   @db.Decimal(10, 2)
+  quantityMultiplier   Decimal  @db.Decimal(10, 2)
   icebergQty           String
-  icebergQtyMultiplier Decimal   @db.Decimal(10, 2)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  Actions              Actions[]
-  Grids                Grids[]
+  icebergQtyMultiplier Decimal  @db.Decimal(10, 2)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  action               Action[]
+  grid                 Grid[]
 }
 
-model Actions {
-  id                 Int               @id @default(autoincrement())
+model Action {
+  id                 Int              @id @default(autoincrement())
   automationId       Int
   type               String
   orderTemplateId    Int
   withdrawTemplateId Int
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  orderTemplate      OrderTemplates    @relation(fields: [orderTemplateId], references: [id])
-  withdrawTemplate   withdrawTemplates @relation(fields: [withdrawTemplateId], references: [id])
-  automation         Automations       @relation(fields: [automationId], references: [id])
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  orderTemplate      OrderTemplate    @relation(fields: [orderTemplateId], references: [id])
+  withdrawTemplate   withdrawTemplate @relation(fields: [withdrawTemplateId], references: [id])
+  automation         Automation       @relation(fields: [automationId], references: [id])
 }
 
-model Grids {
-  id              Int            @id @default(autoincrement())
+model Grid {
+  id              Int           @id @default(autoincrement())
   automationId    Int
   orderTemplateId Int
   conditions      String
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  automation      Automations    @relation(fields: [automationId], references: [id])
-  orderTemplate   OrderTemplates @relation(fields: [orderTemplateId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  automation      Automation    @relation(fields: [automationId], references: [id])
+  orderTemplate   OrderTemplate @relation(fields: [orderTemplateId], references: [id])
 }
 
-model Monitors {
+model Monitor {
   id             Int      @id @default(autoincrement())
   symbol         String   @unique @default("*")
   type           String   @unique

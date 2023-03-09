@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CreateSymbolDto } from './dto/create-symbol.dto';
+import { GetSymbolDto } from './dto/get-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
 import { SymbolsService } from './symbols.service';
 
@@ -13,8 +14,8 @@ export class SymbolsController {
   }
 
   @Get()
-  findAll() {
-    return this.symbolsService.findAll();
+  findAll(@Query() query: GetSymbolDto) {
+    return this.symbolsService.findAll(query);
   }
 
   @Get(':symbol')

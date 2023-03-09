@@ -13,7 +13,7 @@ import { UserToken } from './models/UserToken';
 export class AuthService {
     constructor(
         private readonly userService: UserService,
-        private readonly jwtService: JwtService,
+        private readonly jwtService: JwtService
     ) { }
 
     findByUserId(userId: number) {

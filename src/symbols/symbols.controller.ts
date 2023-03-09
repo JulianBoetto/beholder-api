@@ -18,12 +18,12 @@ export class SymbolsController {
   }
 
   @Get(':symbol')
-  findOne(@Param('symbol') id: string) {
-    return this.symbolsService.findOne(+id);
+  findOne(@Param('symbol') symbol: string) {
+    return this.symbolsService.findOne(symbol);
   }
 
   @Patch(':symbol')
-  update(@Param('symbol') id: string, @Body() updateSymbolDto: UpdateSymbolDto) {
-    return this.symbolsService.update(+id, updateSymbolDto);
+  update(@Param('symbol') symbol: string, @Body() updateSymbolDto: UpdateSymbolDto) {
+    return this.symbolsService.update(symbol, updateSymbolDto);
   }
 }

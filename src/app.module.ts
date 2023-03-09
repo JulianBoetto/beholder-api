@@ -11,9 +11,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { SymbolsModule } from './symbols/symbols.module';
 import { MonitorsModule } from './monitors/monitors.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, WinstonModule.forRoot(winstonConfig), SymbolsModule, MonitorsModule,],
+  imports: [PrismaModule, UsersModule, AuthModule, WinstonModule.forRoot(winstonConfig), SymbolsModule, MonitorsModule, SettingsModule,],
   controllers: [AppController],
   providers: [
     {

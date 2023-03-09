@@ -26,4 +26,8 @@ export class UsersService {
     })
     return updatedUser;
   }
+
+  async getSettings() {
+    
+  }
 }

@@ -9,8 +9,8 @@ export class SymbolsController {
   constructor(private readonly symbolsService: SymbolsService) { }
 
   @Post('sync')
-  create(@Body() createSymbolDto: CreateSymbolDto) {
-    return this.symbolsService.create(createSymbolDto);
+  create() {
+    return this.symbolsService.syncSymbols();
   }
 
   @Get()

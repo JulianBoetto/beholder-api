@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UsersService } from 'src/users/users.service';
 import { CreateSymbolDto } from './dto/create-symbol.dto';
 import { GetSymbolDto } from './dto/get-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
 
 @Injectable()
 export class SymbolsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly usersService: UsersService
+  ) { }
 
   create(createSymbolDto: CreateSymbolDto) {
     return 'This action syncs all symbols';
@@ -18,7 +22,7 @@ export class SymbolsService {
     if (search || page || onlyFavorites === 'true')
       return await this.searchSymbols(search, onlyFavorites === 'true', parseInt(page));
     else
-      return await this.getSymbols();
+      return await this.getAllSymbols();
   }
 
   async findOne(symbolId: string) {
@@ -69,7 +73,35 @@ export class SymbolsService {
     }
   }
 
-  async getSymbols() {
+  async getAllSymbols() {
     return await this.prisma.symbol.findMany();
+  }
+
+  async syncSymbols() {
+    const favoriteSymbols = (await this.getAllSymbols()).filter(s => s.isFavorite).map(s => s.symbol);
+
+    const settingsRepository = this.usersService.getSettings();
+    // const settings = await settingsRepository.getSettingsDecrypted(res.locals.token.id);
+    // const exchange = require('../utils/exchange')(settings);
+    // let symbols = (await exchange.exchangeInfo()).symbols.map(item => {
+    //     if(!useBlvt && item.baseAsset.endsWith("UP") || item.baseAsset.endsWith("DOWN")) return false;
+    //     if(ignoredCoins.includes(item.quoteAsset) || ignoredCoins.includes(item.baseAsset)) return false;
+
+    //     const minNotionalFilter = item.filters.find(filter => filter.filterType === 'MIN_NOTIONAL');
+    //     const lotSizeFilter = item.filters.find(filter => filter.filterType === 'LOT_SIZE');
+    //     const priceFilter = item.filters.find(filter => filter.filterType === 'PRICE_FILTER');
+
+    //     return {
+    //         symbol: item.symbol,
+    //         basePrecision: item.baseAssetPrecision,
+    //         quotePrecision: item.quoteAssetPrecision,
+    //         base: item.baseAsset,
+    //         quote: item.quoteAsset,
+    //         stepSize: lotSizeFilter ? lotSizeFilter.stepSize : '1',
+    //         tickSize: priceFilter ? priceFilter.tickSize : '1',
+    //         minNotional: minNotionalFilter ? minNotionalFilter.minNotional : '1',
+    //         minLotSize: lotSizeFilter ? lotSizeFilter.minQty : '1',
+    //         isFavorite: favoriteSymbols.some(s => s === item.symbol)
+    //     }
   }
 }

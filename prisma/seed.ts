@@ -31,7 +31,26 @@ async function main() {
         },
     })
     console.log({ julian })
+
+    const defaultSymbol = "BTCUSDT";
+    const btcusdt = await prisma.symbols.upsert({
+        where: { symbol: defaultSymbol },
+        update: {},
+        create: {
+            symbol: defaultSymbol,
+            basePrecision: 8,
+            quotePrecision: 8,
+            minNotional: '0.1',
+            minLotSize: '0.1',
+            isFavorite: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    });
+    console.log({ btcusdt })
+
 }
+
 main()
     .then(async () => {
         await prisma.$disconnect()

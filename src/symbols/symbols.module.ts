@@ -9,4 +9,4 @@ import { SymbolsService } from './symbols.service';
   controllers: [SymbolsController],
   providers: [SymbolsService]
 })
-export class SymbolsModule {}
+export class SymbolsModule { }

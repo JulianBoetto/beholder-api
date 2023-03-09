@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Setting } from 'src/settings/entities/setting.entity';
 import { SettingsService } from 'src/settings/settings.service';
 import { CreateSymbolDto } from './dto/create-symbol.dto';
 import { GetSymbolDto } from './dto/get-symbol.dto';
@@ -9,7 +10,7 @@ import { UpdateSymbolDto } from './dto/update-symbol.dto';
 export class SymbolsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly settingsService: SettingsService
+    private readonly settingsService: SettingsService,
   ) { }
 
   create(createSymbolDto: CreateSymbolDto) {
@@ -80,8 +81,9 @@ export class SymbolsService {
   async syncSymbols(id: number) {
     const favoriteSymbols = (await this.getAllSymbols()).filter(s => s.isFavorite).map(s => s.symbol);
 
-    const settingsRepository = await this.settingsService.getSettingsDecrypted(id);
-    // const settings = await settingsRepository.getSettingsDecrypted(res.locals.token.id);
+    const settings: Setting = await this.settingsService.getSettingsDecrypted(id);
+    // const exchangeInfo = this.binanceService.exchangeInfo()
+    // return exchange.exchangeInfo(settings)
     // const exchange = require('../utils/exchange')(settings);
     // let symbols = (await exchange.exchangeInfo()).symbols.map(item => {
     //     if(!useBlvt && item.baseAsset.endsWith("UP") || item.baseAsset.endsWith("DOWN")) return false;
@@ -103,6 +105,6 @@ export class SymbolsService {
     //         minLotSize: lotSizeFilter ? lotSizeFilter.minQty : '1',
     //         isFavorite: favoriteSymbols.some(s => s === item.symbol)
     //     }
-    return settingsRepository
+    // return exchangeInfo
   }
 }

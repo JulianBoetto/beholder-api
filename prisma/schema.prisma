@@ -8,8 +8,8 @@ generator client {
 }
 
 model User {
-  id           Int @id @default(autoincrement()) 
-  email        String @unique
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
   password     String
   apiUrl       String
   accessKey    String
@@ -23,7 +23,130 @@ model User {
   telegramBot  String
   telegramChat String
   pushToken    String
-  refreshToken String @db.LongText
+  refreshToken String   @db.LongText
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model Symbol {
+  symbol         String   @unique
+  basePrecision  Int
+  quotePrecision Int
+  minNotional    String
+  minLotSize     String
+  isFavorite     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Order {
+  id            Int        @id @default(autoincrement())
+  automationId  Int
+  symbol        String
+  orderId       BigInt     @db.BigInt
+  clientOrderId String     @unique
+  transactTime  BigInt     @db.BigInt
+  type          String
+  side          String
+  status        String
+  isMaker       Boolean
+  limitPrice    String
+  stopPrice     String
+  avgPrice      Decimal    @db.Decimal(18, 8)
+  commission    String
+  net           Decimal    @db.Decimal(18, 8)
+  quantity      String
+  icebergQty    String
+  obs           String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  automation    Automation @relation(fields: [automationId], references: [id])
+}
+
+model Automation {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  symbol     String   @unique
+  indexes    String
+  conditions String
+  schedule   String
+  isActive   Boolean  @default(false)
+  logs       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  order      Order[]
+  action     Action[]
+  grid       Grid[]
+}
+
+model withdrawTemplate {
+  id               Int      @id @default(autoincrement())
+  name             String   @unique
+  coin             String   @unique
+  amount           String
+  amountMultiplier Decimal  @db.Decimal(10, 2)
+  address          String
+  addressTag       String
+  network          String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  action           Action[]
+}
+
+model OrderTemplate {
+  id                   Int      @id @default(autoincrement())
+  name                 String   @unique
+  symbol               String   @unique
+  type                 String
+  side                 String
+  limitPrice           String
+  limitPriceMultiplier Decimal  @db.Decimal(10, 2)
+  stopPrice            String
+  stopPriceMultiplier  Decimal  @db.Decimal(10, 2)
+  quantity             String
+  quantityMultiplier   Decimal  @db.Decimal(10, 2)
+  icebergQty           String
+  icebergQtyMultiplier Decimal  @db.Decimal(10, 2)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  action               Action[]
+  grid                 Grid[]
+}
+
+model Action {
+  id                 Int              @id @default(autoincrement())
+  automationId       Int
+  type               String
+  orderTemplateId    Int
+  withdrawTemplateId Int
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  orderTemplate      OrderTemplate    @relation(fields: [orderTemplateId], references: [id])
+  withdrawTemplate   withdrawTemplate @relation(fields: [withdrawTemplateId], references: [id])
+  automation         Automation       @relation(fields: [automationId], references: [id])
+}
+
+model Grid {
+  id              Int           @id @default(autoincrement())
+  automationId    Int
+  orderTemplateId Int
+  conditions      String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  automation      Automation    @relation(fields: [automationId], references: [id])
+  orderTemplate   OrderTemplate @relation(fields: [orderTemplateId], references: [id])
+}
+
+model Monitor {
+  id             Int      @id @default(autoincrement())
+  symbol         String   @unique @default("*")
+  type           String   @unique
+  broadcastLabel String
+  interval       String   @unique
+  indexes        String
+  isActive       Boolean  @default(false)
+  isSystemMon    Boolean  @default(false)
+  logs           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

@@ -11,12 +11,14 @@ export class SymbolsService {
     return 'This action syncs all symbols';
   }
 
-  findAll() {
-    return this.prisma.symbol.findMany();
+  async findAll() {
+    return await this.prisma.symbol.findMany();
   }
 
-  findOne(symbol: string) {
-    return `This action returns a #${symbol} symbol`;
+  async findOne(symbolId: string) {
+    const symbol = await this.prisma.symbol.findUnique({ where: { symbol: symbolId } });
+    if (symbol) return symbol;
+    return [];
   }
 
   update(symbol: string, updateSymbolDto: UpdateSymbolDto) {

@@ -2,15 +2,15 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class UserService {
+export class UsersService {
   constructor(private readonly prisma: PrismaService) { }
 
   findByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+    return this.prisma.users.findUnique({ where: { email } });
   }
 
   findById(id: number) {
-    return this.prisma.user.findFirst({ where: { id } });
+    return this.prisma.users.findFirst({ where: { id } });
   }
 
   async update(
@@ -21,7 +21,7 @@ export class UserService {
     if (!user) {
       throw new BadRequestException("User does not exist.")
     }
-    const updatedUser = await this.prisma.user.update({
+    const updatedUser = await this.prisma.users.update({
       where: { id: userId }, data
     })
     return updatedUser;

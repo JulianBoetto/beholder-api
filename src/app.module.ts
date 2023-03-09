@@ -8,10 +8,10 @@ import { AccessTokenGuard } from './auth/guards/accessToken.guard';
 import { winstonConfig } from './configs/winston.config';
 import { LoggerInterceptor } from './interceptors/logger.interceptors';
 import { PrismaModule } from './prisma/prisma.module';
-import { UserModule } from './user/user.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [PrismaModule, UserModule, AuthModule, WinstonModule.forRoot(winstonConfig),],
+  imports: [PrismaModule, UsersModule, AuthModule, WinstonModule.forRoot(winstonConfig),],
   controllers: [AppController],
   providers: [
     {

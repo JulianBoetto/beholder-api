@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from "bcrypt";
-import { User } from 'src/user/entities/user.entity';
-import { UserService } from 'src/user/user.service';
+import { User } from 'src/users/entities/user.entity';
+import { UsersService } from 'src/users/users.service';
 import { decryptData, encryptData } from 'src/utils/encrypt';
 import { Auth } from './entities/auth.entity';
 import { UnauthorizedError } from './errors/unauthorized.error';
@@ -12,12 +12,12 @@ import { UserToken } from './models/UserToken';
 @Injectable()
 export class AuthService {
     constructor(
-        private readonly userService: UserService,
+        private readonly usersService: UsersService,
         private readonly jwtService: JwtService
     ) { }
 
     findByUserId(userId: number) {
-        return this.userService.findById(userId);
+        return this.usersService.findById(userId);
     }
 
     async login(user: User): Promise<UserToken> {
@@ -26,7 +26,7 @@ export class AuthService {
             email: user.email
         };
 
-        const { pushToken } = await this.userService.findById(user.id)
+        const { pushToken } = await this.usersService.findById(user.id)
         const access_token = await this.getAccessToken(payload)
         const refresh_token = await this.getRefreshToken(payload)
 
@@ -57,7 +57,7 @@ export class AuthService {
 
 
     async validateUser(email: string, password: string) {
-        const user = await this.userService.findByEmail(email);
+        const user = await this.usersService.findByEmail(email);
 
         if (user) {
             const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -78,14 +78,14 @@ export class AuthService {
     async logout(userId: number) {
         const { id, refreshToken } = await this.findByUserId(userId)
         if (refreshToken) {
-            await this.userService.update(id, { refreshToken: "" })
+            await this.usersService.update(id, { refreshToken: "" })
         }
         return
     }
 
     async updateRefreshToken(auth: Auth) {
         const encryptRefreshToken = await encryptData(auth.refresh_token);
-        return await this.userService.update(auth.userId, { refreshToken: encryptRefreshToken })
+        return await this.usersService.update(auth.userId, { refreshToken: encryptRefreshToken })
     }
 
     async refreshTokens(userId: number, refresh_token: string) {
@@ -110,7 +110,7 @@ export class AuthService {
     }
 
     async getUserIfRefreshTokenMatches(refresh_token: string, userId: number) {
-        const user = await this.userService.findById(userId);
+        const user = await this.usersService.findById(userId);
         const decryptedRefreshToken = await decryptData(user.refreshToken);
         if (refresh_token === decryptedRefreshToken) return user
     }

@@ -9,9 +9,10 @@ import { winstonConfig } from './configs/winston.config';
 import { LoggerInterceptor } from './interceptors/logger.interceptors';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
+import { SymbolsModule } from './symbols/symbols.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, WinstonModule.forRoot(winstonConfig),],
+  imports: [PrismaModule, UsersModule, AuthModule, WinstonModule.forRoot(winstonConfig), SymbolsModule,],
   controllers: [AppController],
   providers: [
     {

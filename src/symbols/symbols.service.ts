@@ -18,7 +18,7 @@ export class SymbolsService {
     if (search || page || onlyFavorites === 'true')
       return await this.searchSymbols(search, onlyFavorites === 'true', parseInt(page));
     else
-      return await this.getSymbols(query);
+      return await this.getSymbols();
   }
 
   async findOne(symbolId: string) {
@@ -69,7 +69,7 @@ export class SymbolsService {
     }
   }
 
-  async getSymbols(query: GetSymbolDto) {
-
+  async getSymbols() {
+    return await this.prisma.symbol.findMany();
   }
 }

@@ -6,7 +6,7 @@ import { SymbolsService } from './symbols.service';
 
 @Controller('symbols')
 export class SymbolsController {
-  constructor(private readonly symbolsService: SymbolsService) {}
+  constructor(private readonly symbolsService: SymbolsService) { }
 
   @Post('sync')
   create(@Body() createSymbolDto: CreateSymbolDto) {

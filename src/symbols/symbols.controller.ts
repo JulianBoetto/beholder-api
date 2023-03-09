@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { CreateSymbolDto } from './dto/create-symbol.dto';
+import { Body, Controller, Get, Param, Patch, Post, Query, Request } from '@nestjs/common';
+import { AuthRequest } from 'src/auth/models/AuthRequest';
 import { GetSymbolDto } from './dto/get-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
 import { SymbolsService } from './symbols.service';
@@ -9,8 +9,9 @@ export class SymbolsController {
   constructor(private readonly symbolsService: SymbolsService) { }
 
   @Post('sync')
-  create() {
-    return this.symbolsService.syncSymbols();
+  create(@Request() req: AuthRequest) {
+    const userId = req.user['userId'];
+    return this.symbolsService.syncSymbols(userId);
   }
 
   @Get()

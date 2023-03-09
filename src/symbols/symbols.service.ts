@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UsersService } from 'src/users/users.service';
+import { SettingsService } from 'src/settings/settings.service';
 import { CreateSymbolDto } from './dto/create-symbol.dto';
 import { GetSymbolDto } from './dto/get-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
@@ -9,7 +9,7 @@ import { UpdateSymbolDto } from './dto/update-symbol.dto';
 export class SymbolsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly usersService: UsersService
+    private readonly settingsService: SettingsService
   ) { }
 
   create(createSymbolDto: CreateSymbolDto) {
@@ -77,10 +77,10 @@ export class SymbolsService {
     return await this.prisma.symbol.findMany();
   }
 
-  async syncSymbols() {
+  async syncSymbols(id: number) {
     const favoriteSymbols = (await this.getAllSymbols()).filter(s => s.isFavorite).map(s => s.symbol);
 
-    const settingsRepository = this.usersService.getSettings();
+    const settingsRepository = await this.settingsService.getSettingsDecrypted(id);
     // const settings = await settingsRepository.getSettingsDecrypted(res.locals.token.id);
     // const exchange = require('../utils/exchange')(settings);
     // let symbols = (await exchange.exchangeInfo()).symbols.map(item => {
@@ -103,5 +103,6 @@ export class SymbolsService {
     //         minLotSize: lotSizeFilter ? lotSizeFilter.minQty : '1',
     //         isFavorite: favoriteSymbols.some(s => s === item.symbol)
     //     }
+    return settingsRepository
   }
 }

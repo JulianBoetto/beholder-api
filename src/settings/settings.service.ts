@@ -1,26 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSettingDto } from './dto/create-setting.dto';
-import { UpdateSettingDto } from './dto/update-setting.dto';
+import { UsersService } from 'src/users/users.service';
+import { decryptData } from 'src/utils/encrypt';
 
 @Injectable()
 export class SettingsService {
-  create(createSettingDto: CreateSettingDto) {
-    return 'This action adds a new setting';
-  }
+  constructor(
+    private readonly usersService: UsersService
+  ) { }
 
-  findAll() {
-    return `This action returns all settings`;
-  }
+  private settingsCache: any = [];
 
-  findOne(id: number) {
-    return `This action returns a #${id} setting`;
-  }
+  async getSettingsDecrypted(id: number) {
+    let settings = this.settingsCache[id];
 
-  update(id: number, updateSettingDto: UpdateSettingDto) {
-    return `This action updates a #${id} setting`;
-  }
+    if (!settings) {
+        settings = await this.usersService.getSettings(id);
+        settings.secretKey = await decryptData(settings.secretKey)
+        this.settingsCache[id] = settings;
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} setting`;
+    return settings;
   }
 }

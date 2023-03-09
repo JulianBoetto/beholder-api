@@ -1,7 +1,6 @@
 import { Controller, Delete, HttpCode, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { IsPublic } from './decorators/is-public.decorator';
-import { AccessTokenGuard } from './guards/accessToken.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenGuard } from './guards/refreshToken.guard';
 import { AuthRequest } from './models/AuthRequest';

@@ -27,7 +27,7 @@ export class UsersService {
     return updatedUser;
   }
 
-  async getSettings() {
-    
+  async getSettings(id: number) {
+    return this.prisma.user.findFirst({ where: { id } });
   }
 }

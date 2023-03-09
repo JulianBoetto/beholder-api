@@ -1,4 +1,3 @@
-
 import {
     utilities as nestWinstonModuleUtilities,
     WinstonModuleOptions,
@@ -8,19 +7,23 @@ import * as winston from 'winston';
 export const winstonConfig: WinstonModuleOptions = {
     levels: winston.config.npm.levels,
     level: 'verbose',
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.simple()
+    ),
     transports: [
         new winston.transports.Console({
             format: winston.format.combine(
-                winston.format.timestamp(),
                 nestWinstonModuleUtilities.format.nestLike(),
             ),
         }),
         new winston.transports.File({
-            level: 'verbose',
             filename: 'application.log',
             dirname: 'logs',
-            maxsize: 10000000,
-            maxFiles: 1
+            maxsize: 1024 * 1024,
+            maxFiles: 1,
+            tailable: true
         }),
     ],
 };

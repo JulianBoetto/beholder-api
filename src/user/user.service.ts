@@ -1,7 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -28,6 +26,4 @@ export class UserService {
     })
     return updatedUser;
   }
-
-  async remove(id: string) { }
 }

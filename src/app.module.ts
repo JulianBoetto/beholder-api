@@ -10,9 +10,10 @@ import { LoggerInterceptor } from './interceptors/logger.interceptors';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { SymbolsModule } from './symbols/symbols.module';
+import { MonitorsModule } from './monitors/monitors.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, WinstonModule.forRoot(winstonConfig), SymbolsModule,],
+  imports: [PrismaModule, UsersModule, AuthModule, WinstonModule.forRoot(winstonConfig), SymbolsModule, MonitorsModule,],
   controllers: [AppController],
   providers: [
     {

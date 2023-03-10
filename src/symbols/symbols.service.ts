@@ -47,17 +47,19 @@ export class SymbolsService {
       skip: 10 * (page - 1)
     };
 
-    let rawFavorites: number;
+    let rawOffset: number = 10 * (page - 1);
 
     if (onlyFavorites) {
       options = { ...options, where: { isFavorite: true } };
-      rawFavorites = 10 * (page - 1);
     };
 
     if (search) {
       if (search.length < 6) {
         const symbolName: string = `%${search.toUpperCase()}%`;
-        const filterSymbols: any = await this.prisma.$queryRaw`SELECT * FROM Symbol WHERE symbol LIKE ${symbolName} LIMIT 10 OFFSET ${rawFavorites}`
+        let filterSymbols: any;
+        if (onlyFavorites)
+          filterSymbols = await this.prisma.$queryRaw`SELECT * FROM Symbol WHERE symbol LIKE ${symbolName} AND isFavorite IS true LIMIT 10 OFFSET ${rawOffset}`;
+        else filterSymbols = await this.prisma.$queryRaw`SELECT * FROM Symbol WHERE symbol LIKE ${symbolName} AND isFavorite IS false LIMIT 10 OFFSET ${rawOffset}`;
         const symbols: object = {
           count: filterSymbols.length,
           rows: filterSymbols
@@ -110,7 +112,7 @@ export class SymbolsService {
 
     if (symbols && symbols.length) {
       await this.prisma.symbol.deleteMany();
-      await this.prisma.symbol.createMany({ data: symbols, skipDuplicates: true})
+      await this.prisma.symbol.createMany({ data: symbols, skipDuplicates: true })
     }
 
     return symbols

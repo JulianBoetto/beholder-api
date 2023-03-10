@@ -6,13 +6,13 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { AccessTokenGuard } from './auth/guards/accessToken.guard';
 import { winstonConfig } from './configs/winston.config';
-import { LoggerInterceptor } from './interceptors/logger.interceptors';
-import { PrismaModule } from './prisma/prisma.module';
-import { UsersModule } from './users/users.module';
-import { SymbolsModule } from './symbols/symbols.module';
-import { MonitorsModule } from './monitors/monitors.module';
-import { SettingsModule } from './settings/settings.module';
 import { ExchangeModule } from './exchange/exchange.module';
+import { LoggerInterceptor } from './interceptors/logger.interceptors';
+import { MonitorsModule } from './monitors/monitors.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { SettingsModule } from './settings/settings.module';
+import { SymbolsModule } from './symbols/symbols.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -34,7 +34,7 @@ import { ExchangeModule } from './exchange/exchange.module';
     {
       provide: APP_GUARD,
       useClass: AccessTokenGuard
-    },
+    }
   ],
 })
 export class AppModule { }

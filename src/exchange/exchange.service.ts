@@ -1,7 +1,7 @@
 import { BadRequestException, HttpException, Inject, Injectable } from '@nestjs/common';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { UsersService } from 'src/users/users.service';
-import { getPublicRequest } from 'src/utils/axios';
+import { getPublic } from 'src/utils/axios';
 import { Logger } from 'winston';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class ExchangeService {
 
     async exchangeInfo(settings: Setting) {
         const url = settings.apiUrl
-        const request = await getPublicRequest(url)
+        const request = await getPublic(url)
         return request
     }
 

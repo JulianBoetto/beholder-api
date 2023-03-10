@@ -1,19 +1,29 @@
-import { BadRequestException, HttpException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { UsersService } from 'src/users/users.service';
-import { getPublic } from 'src/utils/axios';
 import { Logger } from 'winston';
+import { MainClient } from 'binance';
 
 @Injectable()
 export class ExchangeService {
-    constructor(private readonly userService: UsersService) { }
+    constructor(
+        private readonly userService: UsersService
+        ) { }
     @Inject('winston') private logger: Logger
 
-
     async exchangeInfo(settings: Setting) {
-        const url = settings.apiUrl
-        const request = await getPublic(url)
-        return request
+        const client = new MainClient({
+            api_key: settings.accessKey,
+            api_secret: settings.secretKey,
+        });
+        client
+            .getExchangeInfo()
+            .then((result) => {
+                return result;
+            })
+            .catch((err) => {
+                this.logger.info(`getExchangeInfo inverse error: ${err}`);
+            });
     }
 
     async getFullBalance(fiat: string, id: number) {
@@ -57,8 +67,9 @@ export class ExchangeService {
     }
 
     async loadBalance(settingsId: number, fiat: string) {
-        const settings = await this.userService.getSettings(settingsId);
-        // const info = await exchange.balance();
+    // const settings: Setting = await this.settingsServic.getSettingsDecrypted(id);
+
+    //     const info = await this.getPrivate(`${apiUrl}/v1/capital/config/getall`, { accessKey, secretKey });
 
         // const coins = Object.entries(info).map(p => p[0]);
 

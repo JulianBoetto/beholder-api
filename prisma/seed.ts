@@ -13,7 +13,7 @@ async function main() {
         create: {
             email: 'julib_8724@hotmail.com',
             password,
-            apiUrl: "https://testnet.binance.vision/api",
+            apiUrl: "https://testnet.binance.vision",
             accessKey: process.env.API_KEY_BINANCE,
             secretKey,
             streamUrl: "wss://testnet.binance.vision/ws",
@@ -43,6 +43,10 @@ async function main() {
             minNotional: '0.1',
             minLotSize: '0.1',
             isFavorite: true,
+		    base: "BTC",
+		    quote: "USDT",
+		    stepSize: "0.00000100",
+		    tickSize: "0.01000000",
             createdAt: new Date(),
             updatedAt: new Date()
         }

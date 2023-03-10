@@ -13,7 +13,7 @@ async function main() {
         create: {
             email: 'julib_8724@hotmail.com',
             password,
-            apiUrl: "https://testnet.binance.vision/api",
+            apiUrl: "https://testnet.binance.vision",
             accessKey: process.env.API_KEY_BINANCE,
             secretKey,
             streamUrl: "wss://testnet.binance.vision/ws",

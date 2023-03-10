@@ -32,6 +32,10 @@ model Symbol {
   symbol         String   @unique
   basePrecision  Int
   quotePrecision Int
+  base           String
+  quote          String
+  stepSize       String
+  tickSize       String
   minNotional    String
   minLotSize     String
   isFavorite     Boolean  @default(false)

@@ -12,6 +12,7 @@ import { UsersModule } from './users/users.module';
 import { SymbolsModule } from './symbols/symbols.module';
 import { MonitorsModule } from './monitors/monitors.module';
 import { SettingsModule } from './settings/settings.module';
+import { ExchangeModule } from './exchange/exchange.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { SettingsModule } from './settings/settings.module';
     WinstonModule.forRoot(winstonConfig),
     SymbolsModule,
     MonitorsModule,
-    SettingsModule,],
+    SettingsModule,
+    ExchangeModule,],
   controllers: [AppController],
   providers: [
     {

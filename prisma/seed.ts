@@ -43,6 +43,10 @@ async function main() {
             minNotional: '0.1',
             minLotSize: '0.1',
             isFavorite: true,
+		    base: "BTC",
+		    quote: "USDT",
+		    stepSize: "0.00000100",
+		    tickSize: "0.01000000",
             createdAt: new Date(),
             updatedAt: new Date()
         }

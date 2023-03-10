@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { ExchangeService } from 'src/exchange/exchange.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { SettingsService } from 'src/settings/settings.service';
+import { symbolsConstants } from './constants';
 import { CreateSymbolDto } from './dto/create-symbol.dto';
 import { GetSymbolDto } from './dto/get-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
@@ -11,6 +13,7 @@ export class SymbolsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly settingsService: SettingsService,
+    private readonly exhangeService: ExchangeService
   ) { }
 
   create(createSymbolDto: CreateSymbolDto) {
@@ -82,29 +85,34 @@ export class SymbolsService {
     const favoriteSymbols = (await this.getAllSymbols()).filter(s => s.isFavorite).map(s => s.symbol);
 
     const settings: Setting = await this.settingsService.getSettingsDecrypted(id);
-    // const exchangeInfo = this.binanceService.exchangeInfo()
-    // return exchange.exchangeInfo(settings)
-    // const exchange = require('../utils/exchange')(settings);
-    // let symbols = (await exchange.exchangeInfo()).symbols.map(item => {
-    //     if(!useBlvt && item.baseAsset.endsWith("UP") || item.baseAsset.endsWith("DOWN")) return false;
-    //     if(ignoredCoins.includes(item.quoteAsset) || ignoredCoins.includes(item.baseAsset)) return false;
+    const exchangeInfo: any = await this.exhangeService.exchangeInfo(settings);
+    let symbols: any = exchangeInfo.symbols.map((item: any) => {
+      if (!symbolsConstants.useBlvt && item.baseAsset.endsWith("UP") || item.baseAsset.endsWith("DOWN")) return false;
+      if (symbolsConstants.ignoredCoins.includes(item.quoteAsset) || symbolsConstants.ignoredCoins.includes(item.baseAsset)) return false;
 
-    //     const minNotionalFilter = item.filters.find(filter => filter.filterType === 'MIN_NOTIONAL');
-    //     const lotSizeFilter = item.filters.find(filter => filter.filterType === 'LOT_SIZE');
-    //     const priceFilter = item.filters.find(filter => filter.filterType === 'PRICE_FILTER');
+      const minNotionalFilter = item.filters.find((filter: { filterType: string; }) => filter.filterType === 'MIN_NOTIONAL');
+      const lotSizeFilter = item.filters.find((filter: { filterType: string; }) => filter.filterType === 'LOT_SIZE');
+      const priceFilter = item.filters.find((filter: { filterType: string; }) => filter.filterType === 'PRICE_FILTER');
 
-    //     return {
-    //         symbol: item.symbol,
-    //         basePrecision: item.baseAssetPrecision,
-    //         quotePrecision: item.quoteAssetPrecision,
-    //         base: item.baseAsset,
-    //         quote: item.quoteAsset,
-    //         stepSize: lotSizeFilter ? lotSizeFilter.stepSize : '1',
-    //         tickSize: priceFilter ? priceFilter.tickSize : '1',
-    //         minNotional: minNotionalFilter ? minNotionalFilter.minNotional : '1',
-    //         minLotSize: lotSizeFilter ? lotSizeFilter.minQty : '1',
-    //         isFavorite: favoriteSymbols.some(s => s === item.symbol)
-    //     }
-    // return exchangeInfo
+      return {
+        symbol: item.symbol,
+        basePrecision: item.baseAssetPrecision,
+        quotePrecision: item.quoteAssetPrecision,
+        base: item.baseAsset,
+        quote: item.quoteAsset,
+        stepSize: lotSizeFilter ? lotSizeFilter.stepSize : '1',
+        tickSize: priceFilter ? priceFilter.tickSize : '1',
+        minNotional: minNotionalFilter ? minNotionalFilter.minNotional : '1',
+        minLotSize: lotSizeFilter ? lotSizeFilter.minQty : '1',
+        isFavorite: favoriteSymbols.some(s => s === item.symbol)
+      }
+    }).filter((s: any) => s);
+
+    if (symbols && symbols.length) {
+      await this.prisma.symbol.deleteMany();
+      await this.prisma.symbol.createMany({ data: symbols, skipDuplicates: true})
+    }
+
+    return symbols
   }
 }

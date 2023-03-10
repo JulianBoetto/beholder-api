@@ -21,10 +21,10 @@ export class SymbolsService {
   }
 
   async findAll(query: GetSymbolDto) {
-    const { search, page, onlyFavorites } = query;
+    const { base, quote, page, onlyFavorites } = query;
 
-    if (search || page || onlyFavorites === 'true')
-      return await this.searchSymbols(search, onlyFavorites === 'true', parseInt(page));
+    if (base || quote || page || onlyFavorites === 'true')
+      return await this.searchSymbols(base, quote, onlyFavorites === 'true', parseInt(page));
     else
       return await this.getAllSymbols();
   }
@@ -39,7 +39,7 @@ export class SymbolsService {
     return `This action updates a #${symbol} symbol`;
   }
 
-  async searchSymbols(search: string, onlyFavorites: boolean, page: number) {
+  async searchSymbols(base: string, quote: string, onlyFavorites: boolean, page: number) {
     let options: object = {
       where: {},
       orderBy: { "symbol": "asc" },
@@ -47,37 +47,22 @@ export class SymbolsService {
       skip: 10 * (page - 1)
     };
 
-    let rawOffset: number = 10 * (page - 1);
+    if (quote) {
+      options = { ...options, where: { quote: quote.toUpperCase(), isFavorite: onlyFavorites } };
+    } else {
+      options = { ...options, where: { base: base.toUpperCase(), isFavorite: onlyFavorites } };
+    }
 
-    if (onlyFavorites) {
-      options = { ...options, where: { isFavorite: true } };
-    };
-
-    if (search) {
-      if (search.length < 6) {
-        const symbolName: string = `%${search.toUpperCase()}%`;
-        let filterSymbols: any;
-        if (onlyFavorites)
-          filterSymbols = await this.prisma.$queryRaw`SELECT * FROM Symbol WHERE symbol LIKE ${symbolName} AND isFavorite IS true LIMIT 10 OFFSET ${rawOffset}`;
-        else filterSymbols = await this.prisma.$queryRaw`SELECT * FROM Symbol WHERE symbol LIKE ${symbolName} AND isFavorite IS false LIMIT 10 OFFSET ${rawOffset}`;
-        const symbols: object = {
-          count: filterSymbols.length,
-          rows: filterSymbols
-        }
-        return symbols;
-      } else {
-        options = { ...options, where: { symbol: search } }
-        const symbols: any = await this.prisma.$transaction([
-          this.prisma.symbol.count(options),
-          this.prisma.symbol.findMany(options)
-        ]);
-        return {
-          count: symbols[0],
-          rows: symbols[1]
-        }
-      }
+    const symbols: any = await this.prisma.$transaction([
+      this.prisma.symbol.count(options),
+      this.prisma.symbol.findMany(options)
+    ]);
+    return {
+      count: symbols[0],
+      rows: symbols[1]
     }
   }
+
 
   async getAllSymbols() {
     return await this.prisma.symbol.findMany();

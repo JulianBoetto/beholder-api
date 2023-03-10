@@ -3,7 +3,11 @@ import { IsOptional, IsString } from "class-validator";
 export class GetSymbolDto {
     @IsOptional()
     @IsString()
-    search?: string;
+    base?: string;
+
+    @IsOptional()
+    @IsString()
+    quote?: string;
 
     @IsOptional()
     @IsString()

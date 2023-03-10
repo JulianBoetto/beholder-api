@@ -1,13 +1,16 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { Setting } from 'src/settings/entities/setting.entity';
-import { UsersService } from 'src/users/users.service';
 import { MainClient } from 'binance';
+import { Setting } from 'src/settings/entities/setting.entity';
+import { SettingsService } from 'src/settings/settings.service';
+import { UsersService } from 'src/users/users.service';
+import { tryFiatConversion } from 'src/utils/fiatConversion';
 import { Logger } from 'winston';
 
 @Injectable()
 export class ExchangeService {
     constructor(
-        private readonly usersService: UsersService
+        private readonly usersService: UsersService,
+        private readonly settingsService: SettingsService
     ) { }
     @Inject('winston') private logger: Logger
 
@@ -29,6 +32,16 @@ export class ExchangeService {
             .catch((err) => {
                 this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
             });
+    }
+
+    async getBalance(fiat: string, id: number) {
+        try {
+            const info = await this.loadBalance(id, fiat);
+            return info;
+        } catch (err) {
+            console.error(err.response ? err.response.data : err);
+            // res.status(500).send(err.response ? err.response.data : err);
+        }
     }
 
     async getFullBalance(fiat: string, id: number) {
@@ -65,32 +78,56 @@ export class ExchangeService {
             //     coins.map(coin => info[coin].avg = grouped[coin].net / grouped[coin].qty);
 
             //     res.json(info);
+            return info
         } catch (err) {
             this.logger.info(err.message);
             return new BadRequestException(err.message);
         }
     }
 
+    async getCoins(id: number) {
+        const settings = await this.settingsService.getSettingsDecrypted(id);
+        const coins = await this.client(settings)
+            .getBalances()
+            .then((result) => {
+                return result;
+            })
+            .catch((err) => {
+                console.log(err)
+                this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
+            });
+        return coins;
+    }
+
     async loadBalance(settingsId: number, fiat: string) {
-        const { apiUrl, accessKey, secretKey } = await this.usersService.getSettings(settingsId);
-        // const info = await this.getPrivate(`${apiUrl}/v1/capital/config/getall`, { accessKey, secretKey });
+        const settings = await this.settingsService.getSettingsDecrypted(settingsId);
+        const info: any = await this.client(settings)
+            .getAccountInformation()
+            .then((result) => {
+                return result;
+            })
+            .catch((err) => {
+                console.log(err)
+                this.logger.info(`getAccountInformation error: ${err.body ? err.body : err}`);
+            });
 
-        // const coins = Object.entries(info).map(p => p[0]);
+        const coins = info.balances;
 
-        // let total = 0;
-        // await Promise.all(coins.map(async (coin) => {
-        //     let available = parseFloat(info[coin].available);
-        //     if (available > 0) available = beholder.tryFiatConversion(coin, available, fiat);
+        let total = 0;
+        await Promise.all(coins.map(async (coin: any, index: number) => {
+            let available = parseFloat(info.balances[index].free);
 
-        //     let onOrder = parseFloat(info[coin].onOrder);
-        //     if (onOrder > 0) onOrder = beholder.tryFiatConversion(coin, onOrder, fiat);
+            if (available > 0) available = tryFiatConversion(coin.asset, available, fiat);
 
-        //     info[coin].fiatEstimate = available + onOrder;
-        //     total += available + onOrder;
-        // }))
+            let onOrder = parseFloat(info.balances[index].locked);
+            if (onOrder > 0) onOrder = tryFiatConversion(coin, onOrder, fiat);
 
-        // info.fiatEstimate = `~${fiat} ${total.toFixed(2)}`;
-        // return info;
+            info.balances[index].fiatEstimate = available + onOrder;
+            total += available + onOrder;
+        }))
+
+        info.fiatEstimate = `~${fiat} ${total.toFixed(2)}`;
+        return info;
     }
 
 }

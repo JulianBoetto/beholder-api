@@ -7,15 +7,17 @@ export class ExchangeController {
     constructor(private readonly exchangeService: ExchangeService) { }
 
     @Get('balance/full/:fiat')
-    findBalance(@Param("fiat") fiat: string, @Request() req: AuthRequest) {
+    findFullBalance(@Param("fiat") fiat: string, @Request() req: AuthRequest) {
         const userId: number = req.user['userId'];
         return this.exchangeService.getFullBalance(fiat, userId);
     }
 
+    @Get('balance/:fiat')
+    findBalance(@Param("fiat") fiat: string, @Request() req: AuthRequest) {
+        const userId: number = req.user['userId'];
+        return this.exchangeService.getBalance(fiat, userId);
+    }
 
-    // get('/balance/full/:fiat', exchangeController.getFullBalance);
-
-    // get('/balance/:fiat', getBalance);
 
     // get('/coins', getCoins);
 

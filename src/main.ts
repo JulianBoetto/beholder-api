@@ -1,9 +1,11 @@
-import { ValidationPipe } from '@nestjs/common';
+import { UseGuards, ValidationPipe } from '@nestjs/common';
+import { WsAdapter } from '@nestjs/platform-ws';
 import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
 import { WinstonModule } from 'nest-winston';
 import { AppModule } from './app.module';
 import { winstonConfig } from './configs/winston.config';
+import { AccessTokenGuard } from './auth/guards/accessToken.guard';
 
 async function bootstrap() {
   const logger = WinstonModule.createLogger(winstonConfig);
@@ -21,7 +23,8 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000);
+  app.useWebSocketAdapter(new WsAdapter(app));
+  await app.listen(process.env.PORT);
 }
 
 bootstrap();

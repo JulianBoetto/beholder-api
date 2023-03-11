@@ -43,16 +43,32 @@ async function main() {
             minNotional: '0.1',
             minLotSize: '0.1',
             isFavorite: true,
-		    base: "BTC",
-		    quote: "USDT",
-		    stepSize: "0.00000100",
-		    tickSize: "0.01000000",
+            base: "BTC",
+            quote: "USDT",
+            stepSize: "0.00000100",
+            tickSize: "0.01000000",
             createdAt: new Date(),
             updatedAt: new Date()
         }
     });
     console.log({ btcusdt })
 
+    const automation = await prisma.automation.upsert({
+        where: { symbol: "BTCUSDT" },
+        update: {},
+        create: {
+            name: "Estratégia infalível",
+            symbol: "BTCUSDT",
+            indexes: "BTCUSDT:RSI_1m",
+            schedule: "",
+            conditions: "",
+            isActive: false,
+            logs: false,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    });
+    console.log({ automation })
 }
 
 main()

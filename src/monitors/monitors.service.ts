@@ -24,3 +24,11 @@ export class MonitorsService {
     return `This action removes a #${id} monitor`;
   }
 }
+
+export const monitorTypes = {
+  MINI_TICKER: 'MINI_TICKER',
+  BOOK: 'BOOK',
+  USER_DATA: 'USER_DATA',
+  CANDLES: 'CANDLES',
+  TICKER: 'TICKER',
+};

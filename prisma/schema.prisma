@@ -48,7 +48,7 @@ model Order {
   automationId  Int
   symbol        String
   orderId       BigInt     @db.BigInt
-  clientOrderId String     @unique
+  clientOrderId String
   transactTime  BigInt     @db.BigInt
   type          String
   side          String
@@ -65,12 +65,15 @@ model Order {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   automation    Automation @relation(fields: [automationId], references: [id])
+
+  @@unique([clientOrderId, orderId], name: "monitorIdentifier")
+  @@index([symbol])
 }
 
 model Automation {
   id         Int      @id @default(autoincrement())
-  name       String   @unique
-  symbol     String   @unique
+  name       String
+  symbol     String
   indexes    String
   conditions String
   schedule   String
@@ -81,12 +84,14 @@ model Automation {
   order      Order[]
   action     Action[]
   grid       Grid[]
+
+  @@unique([symbol, name], name: "automationIdentifier")
 }
 
 model withdrawTemplate {
   id               Int      @id @default(autoincrement())
-  name             String   @unique
-  coin             String   @unique
+  name             String
+  coin             String
   amount           String
   amountMultiplier Decimal  @db.Decimal(10, 2)
   address          String
@@ -95,6 +100,8 @@ model withdrawTemplate {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   action           Action[]
+
+  @@unique([name, coin], name: "withdrawalTemplateIdentifier")
 }
 
 model OrderTemplate {
@@ -143,14 +150,17 @@ model Grid {
 
 model Monitor {
   id             Int      @id @default(autoincrement())
-  symbol         String   @unique @default("*")
-  type           String   @unique
+  symbol         String   @default("*")
+  type           String
   broadcastLabel String
-  interval       String   @unique
+  interval       String
   indexes        String
   isActive       Boolean  @default(false)
   isSystemMon    Boolean  @default(false)
   logs           Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@unique([symbol, type, interval], name: "monitorIdentifier")
+  @@index([symbol])
 }

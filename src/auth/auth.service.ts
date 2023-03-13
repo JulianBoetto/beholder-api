@@ -114,4 +114,8 @@ export class AuthService {
         const decryptedRefreshToken = await decryptData(user.refreshToken);
         if (refresh_token === decryptedRefreshToken) return user
     }
+
+    async verifyJwt(jwt: string): Promise<any> {
+        return this.jwtService.verifyAsync(jwt);
+    }
 }

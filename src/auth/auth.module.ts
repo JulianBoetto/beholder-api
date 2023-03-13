@@ -17,7 +17,8 @@ import { RefreshTokenStrategy } from './strategy/refreshToken.strategy';
     LocalStrategy,
     AccessTokenStrategy,
     RefreshTokenStrategy
-  ]
+  ],
+  exports: [AuthService]
 })
 
 export class AuthModule implements NestModule {

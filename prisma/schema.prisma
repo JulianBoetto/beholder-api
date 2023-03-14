@@ -47,8 +47,8 @@ model Order {
   id            Int        @id @default(autoincrement())
   automationId  Int
   symbol        String
-  orderId       BigInt     @db.BigInt
-  clientOrderId String
+  orderId       Int
+  clientOrderId Int
   transactTime  BigInt     @db.BigInt
   type          String
   side          String

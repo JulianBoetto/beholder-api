@@ -52,6 +52,9 @@ export const BinanceWS = (settings: Setting, callback) => {
   const wsClient = new WebsocketClient({
     api_key: settings.accessKey,
     api_secret: settings.secretKey,
+    restOptions: {
+      baseUrl: settings.apiUrl
+    },
     wsUrl: settings.streamUrl,
     beautify: true,
   });
@@ -59,7 +62,7 @@ export const BinanceWS = (settings: Setting, callback) => {
   // receive raw events
   wsClient.on('message', (data) => {
     // console.log('raw message received ', JSON.stringify(data, null, 2));
-    callback(data)
+    callback(data);
   });
 
   // notification when a connection is opened
@@ -87,6 +90,6 @@ export const BinanceWS = (settings: Setting, callback) => {
   wsClient.on('error', (data) => {
     console.log('ws saw error ', data?.wsKey);
   });
-  
+
   return wsClient;
 };

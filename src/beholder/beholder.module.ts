@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
-import { BeholderService } from './beholder.service';
 import { BeholderController } from './beholder.controller';
-import { AutomationsModule } from 'src/automations/automations.module';
+import { BeholderService } from './beholder.service';
 
 @Module({
   controllers: [BeholderController],

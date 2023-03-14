@@ -153,7 +153,7 @@ export class BeholderService {
     symbol: string,
     index: string,
     interval: string | null,
-    value: object,
+    value: number | object,
     executeAutomations = true,
   ) {
     if (this.LOCK_MEMORY) return false;
@@ -173,18 +173,28 @@ export class BeholderService {
 
   private isLocked(automationId: string | any) {
     if (Array.isArray(automationId))
-        return automationId.some(id => this.LOCK_BRAIN[id] === true);
+      return automationId.some((id) => this.LOCK_BRAIN[id] === true);
 
     return this.LOCK_BRAIN[automationId] === true;
-}
+  }
 
   async testAutomations(memoryKey: string) {
     const automations = this.findAutomations(memoryKey);
-    if (!automations || !automations.length || this.isLocked(automations.map(a => a.id))) {
-        if (this.LOGS) this.logger.info(`Beholder has no automations for memoryKey: ${memoryKey} or the brain is locked!`);
-        return false;
+    if (
+      !automations ||
+      !automations.length ||
+      this.isLocked(automations.map((a) => a.id))
+    ) {
+      if (this.LOGS)
+        this.logger.info(
+          `Beholder has no automations for memoryKey: ${memoryKey} or the brain is locked!`,
+        );
+      return false;
     }
-    this.setLocked(automations.map(a => a.id), true);
+    this.setLocked(
+      automations.map((a) => a.id),
+      true,
+    );
     // let results;
     // try {
     //     const promises = automations.map(async (automation) => {

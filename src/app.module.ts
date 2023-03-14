@@ -17,6 +17,7 @@ import { BeholderModule } from './beholder/beholder.module';
 import { AutomationsModule } from './automations/automations.module';
 import { ExchangeMonitorModule } from './exchange-monitor/exchange-monitor.module';
 import { WsAdapter } from './utils/webSocket';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { WsAdapter } from './utils/webSocket';
     BeholderModule,
     AutomationsModule,
     ExchangeMonitorModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [

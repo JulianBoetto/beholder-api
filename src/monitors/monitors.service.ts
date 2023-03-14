@@ -24,6 +24,7 @@ export class MonitorsService implements OnModuleInit {
   private WSS: any;
   private beholder: any;
   private settings: Setting;
+  private book: any = [];
 
   onModuleInit() {
     this.init();
@@ -160,7 +161,6 @@ export class MonitorsService implements OnModuleInit {
     );
   }
 
-  private book: any[];
   private startBookMonitor(
     monitorId: number,
     broadcastLabel: string,
@@ -168,43 +168,66 @@ export class MonitorsService implements OnModuleInit {
   ) {
     // if (!exchange) return new Error("Exchange Monitor not initialized yet!");
 
-    this.exchangeService.bookStream(this.settings, (order) => {
-      this.logger.info(`Monitor: ${monitorId}: ${order}`);
+    this.exchangeService.bookStream(
+      this.settings,
+      ['BTCUSDT', 'ETHUSDT'],
+      async (order: any) => {
+        if (logs)
+          this.logger.info(
+            `Monitor: ${monitorId}: ${order.s} (best bid: ${parseFloat(
+              order.b,
+            ).toFixed(2)} / best ask: ${parseFloat(order.a).toFixed(2)})`,
+          );
 
-      if (this.book.length >= 200) {
-        // if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: book });
+        if (this.book.length >= 200) {
+          // if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: book });
 
-        this.book = [];
-      } else this.book.push(order);
+          this.book = [];
+        } else this.book.push(order);
 
-      const orderCopy = { ...order };
-      delete orderCopy.symbol;
-      delete orderCopy.updateId;
-      delete orderCopy.bestAskQty;
-      delete orderCopy.bestBidQty;
+        const orderCopy: {
+          s: string;
+          u: string;
+          A: string;
+          B: string;
+          e: string;
+          wsKey: string;
+          wsMarket: string;
+        } = { ...order };
+        delete orderCopy.s;
+        delete orderCopy.u;
+        delete orderCopy.A;
+        delete orderCopy.B;
+        delete orderCopy.e;
+        delete orderCopy.wsKey;
+        delete orderCopy.wsMarket;
 
-      const converted = {};
-    //   Object.entries(orderCopy).map(
-    //     (prop) => (converted[prop[0]] = parseFloat(prop[1])),
-    //   );
+        const converted = {
+          bestAsk: parseFloat(order.a),
+          bestBid: parseFloat(order.b),
+        };
 
-    //   const currentMemory = this.beholderService.getMemory(order.symbol, indexKeys.BOOK);
+        const currentMemory = this.beholderService.getMemory(
+          order.s,
+          indexKeys.BOOK,
+        );
+        const newMemory: any = {};
+        newMemory.previous = currentMemory ? currentMemory.current : converted;
+        newMemory.current = converted;
+        const results = await this.beholderService.updateMemory(
+          order.s,
+          indexKeys.BOOK,
+          null,
+          newMemory,
+        );
 
-    //   const newMemory: any = {};
-    //   newMemory.previous = currentMemory ? currentMemory.current : converted;
-    //   newMemory.current = converted;
+        // if (results)
+        //   results.map((result) => sendMessage({ notification: result }));
+      },
+    );
 
-    //   const results = await this.beholderService.updateMemory(
-    //     order.symbol,
-    //     indexKeys.BOOK,
-    //     null,
-    //     newMemory,
-    //   );
-
-    //   if (results)
-    //     results.map((result) => sendMessage({ notification: result }));
-    });
-
-    this.logger.info(`Monitor ${monitorId}: Book Monitor has started at ${broadcastLabel}`);
+    this.logger.info(
+      `Monitor ${monitorId}: Book Monitor has started at ${broadcastLabel}`,
+    );
   }
 }

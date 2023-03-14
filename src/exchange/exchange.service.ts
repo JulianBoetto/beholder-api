@@ -4,6 +4,7 @@ import { Setting } from 'src/settings/entities/setting.entity';
 import { SettingsService } from 'src/settings/settings.service';
 import { UsersService } from 'src/users/users.service';
 import { tryFiatConversion } from 'src/utils/fiatConversion';
+import { BinanceWS } from 'src/utils/webSocket';
 import { Logger } from 'winston';
 
 @Injectable()
@@ -138,41 +139,13 @@ export class ExchangeService {
   }
 
   miniTickerStream(settings: Setting, callback) {
-    const wsClient = new WebsocketClient({
-      wsUrl: settings.streamUrl,
-    });
-
-    wsClient.on('message', (data) => {
-      // console.log(JSON.stringify(data, null, 2));
-      //   this.logger.info(
-      //     `raw message received: ${JSON.stringify(data, null, 2)}`,
-      //   );
-      callback(data);
-    });
-
-    wsClient.subscribeAllMini24hrTickers('spot');
+    const wsClient = BinanceWS(settings, callback); 
+    // wsClient.subscribeSpotAllMini24hrTickers();
   }
 
-  bookStream(settings: Setting, callback) {
-    // const wsClient = new WebsocketClient({
-    //   api_key: settings.accessKey,
-    //   api_secret: settings.secretKey,
-    //   wsUrl: settings.streamUrl,
-    // });
-
-    // wsClient.on('message', (data) => {
-    //   //   console.log(JSON.stringify(data, null, 2));
-    //   this.logger.info(
-    //     `raw message received: ${JSON.stringify(data, null, 2)}`,
-    //   );
-    //   //   callback(data);
-    // });
-
-    // // notification when a connection is opened
-    // wsClient.on('open', (data: { wsKey: string; ws: any }) => {
-    //   console.log('connection opened open:', data.wsKey, data.ws.target.url);
-    // });
-
-    // wsClient.subscribeAllBookTickers('spot');
+  bookStream(settings: Setting, symbols: any[], callback) {
+    const wsClient = BinanceWS(settings, callback);
+    symbols.forEach(symbol => wsClient.subscribeSpotSymbolBookTicker(symbol))
+    // wsClient.subscribeSpotSymbolBookTicker(symbol);
   }
 }

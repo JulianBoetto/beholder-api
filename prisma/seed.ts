@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { encryptData } from '../src/utils/encrypt';
-import { monitorTypes } from '../src/monitors/monitors.service';
+import { monitorTypes } from 'src/utils/monitorTypes';
 
 const prisma = new PrismaClient();
 async function main() {
@@ -17,7 +17,7 @@ async function main() {
       apiUrl: 'https://testnet.binance.vision',
       accessKey: process.env.API_KEY_BINANCE,
       secretKey,
-      streamUrl: 'wss://testnet.binance.vision/ws',
+      streamUrl: 'wss://testnet.binance.vision',
       phone: process.env.PHONE,
       sendGridKey: process.env.SENDGRID_KEY,
       twilioSid: process.env.TWILIO_SID,

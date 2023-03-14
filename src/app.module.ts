@@ -16,7 +16,7 @@ import { UsersModule } from './users/users.module';
 import { BeholderModule } from './beholder/beholder.module';
 import { AutomationsModule } from './automations/automations.module';
 import { ExchangeMonitorModule } from './exchange-monitor/exchange-monitor.module';
-import { WsAdapter } from './utils/ws-adapter';
+import { WsAdapter } from './utils/webSocket';
 
 @Module({
   imports: [

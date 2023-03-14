@@ -8,12 +8,14 @@ import { Auth } from './entities/auth.entity';
 import { UnauthorizedError } from './errors/unauthorized.error';
 import { UserPayload } from './models/UserPayload';
 import { UserToken } from './models/UserToken';
+import { SettingsService } from 'src/settings/settings.service';
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UsersService,
-        private readonly jwtService: JwtService
+        private readonly jwtService: JwtService,
+        private readonly settingsService: SettingsService
     ) { }
 
     findByUserId(userId: number) {
@@ -31,6 +33,8 @@ export class AuthService {
         const refresh_token = await this.getRefreshToken(payload)
 
         await this.updateRefreshToken({ userId: user.id, refresh_token });
+        await this.settingsService.getSettingsDecrypted(user.id);
+        this.usersService.setUserId(user.id);
 
         return {
             access_token,

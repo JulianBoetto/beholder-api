@@ -1,6 +1,5 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { WsAdapter } from '@nestjs/platform-ws';
 import helmet from 'helmet';
 import { WinstonModule } from 'nest-winston';
 import { AppModule } from './app.module';
@@ -12,7 +11,7 @@ async function bootstrap() {
 
   app.use(helmet());
 
-  // app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api');
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -22,7 +21,6 @@ async function bootstrap() {
     }),
   );
 
-  // app.useWebSocketAdapter(new WsAdapter(app));
   await app.listen(process.env.PORT);
 }
 

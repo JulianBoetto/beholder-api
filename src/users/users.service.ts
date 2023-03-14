@@ -3,7 +3,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
+
+  private actualUserId: number;
 
   findByEmail(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
@@ -13,21 +15,24 @@ export class UsersService {
     return this.prisma.user.findFirst({ where: { id } });
   }
 
-  async update(
-    userId: number,
-    data: object
-  ) {
+  async update(userId: number, data: object) {
     const user = await this.findById(userId);
     if (!user) {
-      throw new BadRequestException("User does not exist.")
+      throw new BadRequestException('User does not exist.');
     }
     const updatedUser = await this.prisma.user.update({
-      where: { id: userId }, data
-    })
+      where: { id: userId },
+      data,
+    });
     return updatedUser;
   }
 
   async getSettings(id: number) {
     return this.prisma.user.findFirst({ where: { id } });
+  }
+
+  setUserId(id?: number) {
+    if (!id) return this.actualUserId ? this.actualUserId : parseInt(process.env.USER_ID_DEFAULT);
+    return (this.actualUserId = id);
   }
 }

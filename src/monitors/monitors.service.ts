@@ -1,4 +1,5 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Kline } from 'binance';
 import { BeholderService } from 'src/beholder/beholder.service';
 import { ExchangeService } from 'src/exchange/exchange.service';
 import { OrdersService } from 'src/orders/orders.service';
@@ -8,8 +9,10 @@ import { SettingsService } from 'src/settings/settings.service';
 import { UsersService } from 'src/users/users.service';
 import { indexKeys } from 'src/utils/indexes';
 import { monitorTypes } from 'src/utils/monitorTypes';
-import { orderStatus, orderTypes } from 'src/utils/orderTypes';
+import { orderStatus } from 'src/utils/orderTypes';
+import { toKlineInterval } from 'src/utils/types/klineTypes';
 import { Logger } from 'winston';
+import { Monitor } from './entities/monitor.entity';
 
 @Injectable()
 export class MonitorsService implements OnModuleInit {
@@ -46,7 +49,7 @@ export class MonitorsService implements OnModuleInit {
     // WSS = wssInstance;
     // beholder = beholderInstance;
 
-    const monitors = await this.getActiveMonitors();
+    const monitors: Monitor[] = await this.getActiveMonitors();
     monitors.map((monitor) => {
       setTimeout(async () => {
         switch (monitor.type) {
@@ -68,15 +71,15 @@ export class MonitorsService implements OnModuleInit {
               monitor.broadcastLabel,
               monitor.logs,
             );
-          // case monitorTypes.CANDLES:
-          //     return startChartMonitor(
-          //         monitor.id,
-          //         monitor.symbol,
-          //         monitor.interval,
-          //         monitor.indexes ? monitor.indexes.split(",") : [],
-          //         monitor.broadcastLabel,
-          //         monitor.logs
-          //     );
+          case monitorTypes.CANDLES:
+            return this.startChartMonitor(
+              monitor.id,
+              monitor.symbol,
+              monitor.interval,
+              monitor.indexes ? monitor.indexes.split(',') : [],
+              monitor.broadcastLabel,
+              monitor.logs,
+            );
           // case monitorTypes.TICKER:
           //     return startTickerMonitor(monitor.id, monitor.symbol, monitor.broadcastLabel, monitor.logs);
         }
@@ -90,6 +93,181 @@ export class MonitorsService implements OnModuleInit {
     // }))
 
     this.logger.info('App Exchange Monitor is running!');
+  }
+
+  startChartMonitor(
+    monitorId: number,
+    symbol: string,
+    interval: string,
+    indexes: string[],
+    broadcastLabel: string,
+    logs: boolean,
+  ) {
+    if (!symbol)
+      return new Error("You can't start a Chart Monitor without a symbol!");
+    // if (!exchange) return new Error("Exchange Monitor not initialized yet!");
+
+    this.exchangeService.chartStream(
+      this.settings,
+      symbol,
+      interval,
+      async (ohlc: {
+        e: string;
+        E: number;
+        k: {
+          o: string;
+          c: string;
+          h: string;
+          l: string;
+          v: string;
+          t: number;
+          T: number;
+        };
+        s: string;
+        wsKey: string;
+        wsMarket: string;
+      }) => {
+        const intervalKline =
+          typeof interval === 'string' ? toKlineInterval(interval) : '1m';
+        const params = {
+          symbol,
+          interval: intervalKline,
+          limit: 4,
+        };
+        const previousKlines: Kline[] = await this.exchangeService.getKlines(
+          this.settings,
+          params,
+        );
+        const lastCandle = {
+          open: ohlc.k.o,
+          close: ohlc.k.c,
+          high: ohlc.k.h,
+          low: ohlc.k.l,
+          volume: ohlc.k.v,
+        };
+
+        const previousCandle = {
+          open: previousKlines[previousKlines.length - 2][1],
+          close: previousKlines[previousKlines.length - 2][4],
+          high: previousKlines[previousKlines.length - 2][2],
+          low: previousKlines[previousKlines.length - 2][3],
+          volume: previousKlines[previousKlines.length - 2][5],
+        };
+
+        const previousPreviousCandle = {
+          open: previousKlines[previousKlines.length - 3][1],
+          close: previousKlines[previousKlines.length - 3][4],
+          high: previousKlines[previousKlines.length - 3][2],
+          low: previousKlines[previousKlines.length - 3][3],
+          volume: previousKlines[previousKlines.length - 3][5],
+        };
+
+        if (logs) this.logger.info(`Monitor ${monitorId}: ${lastCandle}`);
+
+        try {
+          o this.beholderService.updateMemory(
+            symbol,
+            indexKeys.LAST_CANDLE,
+            interval,
+            { current: lastCandle, previous: previousCandle },
+            false,
+          );
+          this.beholderService.updateMemory(
+            symbol,
+            indexKeys.PREVIOUS_CANDLE,
+            interval,
+            { current: previousCandle, previous: previousPreviousCandle },
+            false,
+          );
+          // if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: lastCandle });
+          let results: any = await this.processChartData(
+            monitorId,
+            symbol,
+            indexes,
+            interval,
+            ohlc,
+            logs,
+          );
+          results.push(
+            await this.beholderService.testAutomations(
+              this.beholderService.parseMemoryKey(
+                symbol,
+                indexKeys.LAST_CANDLE,
+                interval,
+              ),
+            ),
+          );
+          results.push(
+            await this.beholderService.testAutomations(
+              this.beholderService.parseMemoryKey(
+                symbol,
+                indexKeys.PREVIOUS_CANDLE,
+                interval,
+              ),
+            ),
+          );
+          if (results) {
+            if (logs)
+              this.logger.info(
+                `Monitor ${monitorId}: ChartStream Results: ${results.flat()}`,
+              );
+            // results.flat().map((result) => sendMessage({ notification: result }));
+          }
+        } catch (err) {
+          this.logger.info(`Monitor ${monitorId}: ${err}`);
+        }
+      },
+    );
+    this.logger.info(
+      `Monitor ${monitorId}: Chart Monitor has started at ${symbol}_${interval}`,
+    );
+  }
+
+  async processChartData(
+    monitorId: number,
+    symbol: string,
+    indexes: string[] | string,
+    interval: string,
+    ohlc: any,
+    logs: boolean,
+  ) {
+    if (typeof indexes === 'string') indexes = indexes.split(',');
+    if (!indexes || !Array.isArray(indexes) || indexes.length === 0)
+      return false;
+
+    const memoryKeys = [];
+
+    indexes.map((index) => {
+      const params = index.split('_');
+      const indexName = params[0];
+      params.splice(0, 1);
+
+      try {
+        // const calc = this.execCalc(indexName, ohlc, ...params);
+        // if (logs)
+        //   this.logger.info(
+        //     `Monitor: ${monitorId}: ${indexName}_${interval} calculated: ${JSON.stringify(
+        //       calc.current ? calc.current : calc,
+        //     )}`,
+        //   );
+        // this.beholderService.updateMemory(symbol, index, interval, calc, false);
+
+        memoryKeys.push(
+          this.beholderService.parseMemoryKey(symbol, index, interval),
+        );
+      } catch (err) {
+        this.logger.info(
+          `Monitor ${monitorId}: Exchange Monitor => Can't calc the index ${index}:`,
+        );
+        this.logger.info(`Monitor ${monitorId}: ${err}`);
+      }
+    });
+
+    return Promise.all(
+      memoryKeys.map(async (key) => {
+        return this.beholderService.testAutomations(key);
+      }),
+    );
   }
 
   async startUserDataMonitor(

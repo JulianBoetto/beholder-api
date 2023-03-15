@@ -144,7 +144,7 @@ export class BeholderService {
     return `MEMORY['${memKey}']${memProp}`;
   }
 
-  private parseMemoryKey(symbol: string, index: string, interval = null) {
+  parseMemoryKey(symbol: string, index: string, interval = null) {
     const indexKey = interval ? `${index}_${interval}` : index;
     return `${symbol}:${indexKey}`;
   }
@@ -152,7 +152,7 @@ export class BeholderService {
   async updateMemory(
     symbol: string,
     index: string,
-    interval: string | null,
+    interval: string,
     value: number | object,
     executeAutomations = true,
   ) {

@@ -1,9 +1,10 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { MainClient, WebsocketClient } from 'binance';
+import { KlinesParams, MainClient } from 'binance';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { SettingsService } from 'src/settings/settings.service';
 import { UsersService } from 'src/users/users.service';
 import { tryFiatConversion } from 'src/utils/fiatConversion';
+import { toKlineInterval } from 'src/utils/types/klineTypes';
 import { BinanceWS } from 'src/utils/webSocket';
 import { Logger } from 'winston';
 
@@ -141,6 +142,23 @@ export class ExchangeService {
 
   async userDataStream(settings: Setting, callback) {
     const wsClient = BinanceWS(settings, callback);
-    wsClient.subscribeSpotUserDataStream()
+    wsClient.subscribeSpotUserDataStream();
+  }
+
+  async chartStream(
+    settings: Setting,
+    symbol: string,
+    interval: string,
+    callback,
+  ) {
+    const wsClient = BinanceWS(settings, callback);
+    const intervalKline =
+      typeof interval === 'string' ? toKlineInterval(interval) : '1m';
+    wsClient.subscribeKlines(symbol, intervalKline, 'spot', true);
+  }
+
+  async getKlines(settings: Setting, params: KlinesParams) {
+    const klines = await this.client(settings).getKlines(params);
+    return klines;
   }
 }

@@ -34,7 +34,7 @@ export class BeholderService {
         false,
       );
       this.LOCK_MEMORY = false;
-      this.logger.info(`Beholder Brain has started!`);
+      // this.logger.info(`Beholder Brain has started!`);
     }
   }
 

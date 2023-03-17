@@ -15,7 +15,7 @@ const WS_PORT: string = process.env.WS_PORT;
 @WebSocketGateway({ cors: { origin: '*' } })
 export class WsAdapter {
   constructor(private readonly authService: AuthService) {}
-  @Inject('winston') logger: Logger;
+  // @Inject('winston') logger: Logger;
   @WebSocketServer()
   server: Server;
 
@@ -62,7 +62,7 @@ export const BinanceWS = (settings: Setting, callback) => {
   // receive raw events
   wsClient.on('message', (data) => {
     // console.log('raw message received ', JSON.stringify(data, null, 2));
-    callback(data);
+    // callback(data);
   });
 
   // notification when a connection is opened
@@ -72,7 +72,7 @@ export const BinanceWS = (settings: Setting, callback) => {
 
   wsClient.on('formattedMessage', (data) => {
     // console.log('formattedMessage: ', data);
-    // callback(data)
+    callback(data)
   });
 
   wsClient.on('reply', (data) => {

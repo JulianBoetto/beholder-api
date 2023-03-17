@@ -18,6 +18,7 @@ import { AutomationsModule } from './automations/automations.module';
 import { ExchangeMonitorModule } from './exchange-monitor/exchange-monitor.module';
 import { WsAdapter } from './utils/webSocket';
 import { OrdersModule } from './orders/orders.module';
+import { IndicatorsModule } from './indicators/indicators.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { OrdersModule } from './orders/orders.module';
     AutomationsModule,
     ExchangeMonitorModule,
     OrdersModule,
+    IndicatorsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -4,7 +4,7 @@ import { Setting } from 'src/settings/entities/setting.entity';
 import { SettingsService } from 'src/settings/settings.service';
 import { UsersService } from 'src/users/users.service';
 import { tryFiatConversion } from 'src/utils/fiatConversion';
-import { toKlineInterval } from 'src/utils/types/klineTypes';
+import { toKlineInterval } from 'src/utils/types/klineIntervalTypes';
 import { BinanceWS } from 'src/utils/webSocket';
 import { Logger } from 'winston';
 
@@ -32,7 +32,7 @@ export class ExchangeService {
         return result;
       })
       .catch((err) => {
-        this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
+        // this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
       });
   }
 
@@ -74,7 +74,7 @@ export class ExchangeService {
       //     res.json(info);
       // return info;
     } catch (err) {
-      this.logger.info(err.message);
+      // this.logger.info(err.message);
       return new BadRequestException(err.message);
     }
   }
@@ -88,7 +88,7 @@ export class ExchangeService {
       })
       .catch((err) => {
         console.log(err);
-        this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
+        // this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
       });
     return coins;
   }
@@ -120,12 +120,7 @@ export class ExchangeService {
 
   async miniTickerStream(settings: Setting, callback) {
     const wsClient = BinanceWS(settings, callback);
-    wsClient.subscribeSpotAllMini24hrTickers();
-  }
-
-  async bookStream(settings: Setting, symbols: any[], callback) {
-    const wsClient = BinanceWS(settings, callback);
-    symbols.forEach((symbol) => wsClient.subscribeSpotSymbolBookTicker(symbol));
+    wsClient.subscribeAll24hrTickers('spot', true);
   }
 
   async balance(settings: Setting) {

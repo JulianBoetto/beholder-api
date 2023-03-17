@@ -7,6 +7,7 @@ import { MonitorsService } from './monitors.service';
 import { ExchangeModule } from 'src/exchange/exchange.module';
 import { BeholderModule } from 'src/beholder/beholder.module';
 import { OrdersModule } from 'src/orders/orders.module';
+import { IndicatorsModule } from 'src/indicators/indicators.module';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { OrdersModule } from 'src/orders/orders.module';
     SettingsModule,
     ExchangeModule,
     BeholderModule,
-    OrdersModule
+    OrdersModule,
+    IndicatorsModule,
   ],
   controllers: [MonitorsController],
   providers: [MonitorsService],

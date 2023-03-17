@@ -156,7 +156,7 @@ export class BeholderService {
     value: number | object,
     executeAutomations = true,
   ) {
-    if (this.LOCK_MEMORY) return false;
+    if (this.LOCK_MEMORY) return [];
 
     const memoryKey = this.parseMemoryKey(symbol, index, interval);
     this.MEMORY[memoryKey] = value;
@@ -166,7 +166,7 @@ export class BeholderService {
         `Beholder memory updated: ${memoryKey} => ${JSON.stringify(value)}`,
       );
 
-    if (!executeAutomations) return false;
+    if (!executeAutomations) return [];
 
     return this.testAutomations(memoryKey);
   }
@@ -189,41 +189,41 @@ export class BeholderService {
         this.logger.info(
           `Beholder has no automations for memoryKey: ${memoryKey} or the brain is locked!`,
         );
-      return false;
+      return [];
     }
     this.setLocked(
       automations.map((a) => a.id),
       true,
     );
-    // let results;
-    // try {
-    //     const promises = automations.map(async (automation) => {
-    //         let auto = { ...automation };
-    //         if (auto.symbol.startsWith("*")) {
-    //             const symbol = memoryKey.split(":")[0];
-    //             auto.indexes = auto.indexes.replaceAll(auto.symbol, symbol);
-    //             auto.conditions = auto.conditions.replaceAll(auto.symbol, symbol);
-    //             if (auto.actions) {
-    //                 auto.actions.forEach(action => {
-    //                     if (action.orderTemplate)
-    //                         action.orderTemplate.symbol = symbol;
-    //                 })
-    //             }
-    //             auto.symbol = symbol;
-    //         }
-    //         return evalDecision(memoryKey, auto);
-    //     })
-    //     results = await Promise.all(promises);
-    //     results = results.flat().filter(r => r);
-    //     if (!results && !results.length)
-    //         return false;
-    //     else
-    //         return results;
-    // } finally {
-    //     setTimeout(() => {
-    //         setLocked(automations.map(a => a.id), false);
-    //     }, results && results.length ? INTERVAL : 0);
-    // }
+    let results = [];
+    try {
+        const promises = automations.map(async (automation) => {
+            let auto = { ...automation };
+            if (auto.symbol.startsWith("*")) {
+                const symbol = memoryKey.split(":")[0];
+                auto.indexes = auto.indexes.replaceAll(auto.symbol, symbol);
+                auto.conditions = auto.conditions.replaceAll(auto.symbol, symbol);
+                if (auto.actions) {
+                    auto.actions.forEach(action => {
+                        if (action.orderTemplate)
+                            action.orderTemplate.symbol = symbol;
+                    })
+                }
+                auto.symbol = symbol;
+            }
+            // return evalDecision(memoryKey, auto);
+        })
+        results = await Promise.all(promises);
+        results = results.flat().filter(r => r);
+        if (!results && !results.length)
+            return [];
+        else
+            return results;
+    } finally {
+        setTimeout(() => {
+            this.setLocked(automations.map(a => a.id), false);
+        }, results && results.length ? this.INTERVAL : 0);
+    }
   }
 
   private findAutomations(memoryKey: string) {

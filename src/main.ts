@@ -6,12 +6,12 @@ import { AppModule } from './app.module';
 import { winstonConfig } from './configs/winston.config';
 
 async function bootstrap() {
-  const logger = WinstonModule.createLogger(winstonConfig);
-  const app = await NestFactory.create(AppModule, { cors: true, logger });
+  // const logger = WinstonModule.createLogger(winstonConfig);
+  const app = await NestFactory.create(AppModule, { cors: true });
 
   app.use(helmet());
 
-  // app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api');
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -21,7 +21,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT);
 }
 
 bootstrap();

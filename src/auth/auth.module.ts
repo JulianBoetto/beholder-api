@@ -8,16 +8,18 @@ import { LoginValidationMiddleware } from './middlewares/login-validation.middle
 import { AccessTokenStrategy } from './strategy/accessToken.strategy';
 import { LocalStrategy } from './strategy/local.strategy';
 import { RefreshTokenStrategy } from './strategy/refreshToken.strategy';
+import { SettingsModule } from 'src/settings/settings.module';
 
 @Module({
-  imports: [UsersModule, JwtModule.register({}), PrismaModule],
+  imports: [UsersModule, JwtModule.register({}), PrismaModule, SettingsModule],
   controllers: [AuthController],
   providers: [
     AuthService,
     LocalStrategy,
     AccessTokenStrategy,
     RefreshTokenStrategy
-  ]
+  ],
+  exports: [AuthService]
 })
 
 export class AuthModule implements NestModule {

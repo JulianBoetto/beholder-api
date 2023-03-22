@@ -13,6 +13,11 @@ import { PrismaModule } from './prisma/prisma.module';
 import { SettingsModule } from './settings/settings.module';
 import { SymbolsModule } from './symbols/symbols.module';
 import { UsersModule } from './users/users.module';
+import { BeholderModule } from './beholder/beholder.module';
+import { AutomationsModule } from './automations/automations.module';
+import { WsAdapter } from './utils/webSocket';
+import { OrdersModule } from './orders/orders.module';
+import { IndicatorsModule } from './indicators/indicators.module';
 
 @Module({
   imports: [
@@ -23,7 +28,12 @@ import { UsersModule } from './users/users.module';
     SymbolsModule,
     MonitorsModule,
     SettingsModule,
-    ExchangeModule,],
+    ExchangeModule,
+    BeholderModule,
+    AutomationsModule,
+    OrdersModule,
+    IndicatorsModule,
+  ],
   controllers: [AppController],
   providers: [
     {
@@ -34,7 +44,8 @@ import { UsersModule } from './users/users.module';
     {
       provide: APP_GUARD,
       useClass: AccessTokenGuard
-    }
+    },
+    WsAdapter
   ],
 })
 export class AppModule { }

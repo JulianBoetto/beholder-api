@@ -28,6 +28,10 @@ CREATE TABLE `Symbol` (
     `symbol` VARCHAR(191) NOT NULL,
     `basePrecision` INTEGER NOT NULL,
     `quotePrecision` INTEGER NOT NULL,
+    `base` VARCHAR(191) NOT NULL,
+    `quote` VARCHAR(191) NOT NULL,
+    `stepSize` VARCHAR(191) NOT NULL,
+    `tickSize` VARCHAR(191) NOT NULL,
     `minNotional` VARCHAR(191) NOT NULL,
     `minLotSize` VARCHAR(191) NOT NULL,
     `isFavorite` BOOLEAN NOT NULL DEFAULT false,
@@ -60,7 +64,8 @@ CREATE TABLE `Order` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `Order_clientOrderId_key`(`clientOrderId`),
+    INDEX `Order_symbol_idx`(`symbol`),
+    UNIQUE INDEX `Order_clientOrderId_orderId_key`(`clientOrderId`, `orderId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -77,8 +82,7 @@ CREATE TABLE `Automation` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `Automation_name_key`(`name`),
-    UNIQUE INDEX `Automation_symbol_key`(`symbol`),
+    UNIQUE INDEX `Automation_symbol_name_key`(`symbol`, `name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -95,8 +99,7 @@ CREATE TABLE `withdrawTemplate` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `withdrawTemplate_name_key`(`name`),
-    UNIQUE INDEX `withdrawTemplate_coin_key`(`coin`),
+    UNIQUE INDEX `withdrawTemplate_name_coin_key`(`name`, `coin`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -162,9 +165,8 @@ CREATE TABLE `Monitor` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `Monitor_symbol_key`(`symbol`),
-    UNIQUE INDEX `Monitor_type_key`(`type`),
-    UNIQUE INDEX `Monitor_interval_key`(`interval`),
+    INDEX `Monitor_symbol_idx`(`symbol`),
+    UNIQUE INDEX `Monitor_symbol_type_interval_key`(`symbol`, `type`, `interval`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

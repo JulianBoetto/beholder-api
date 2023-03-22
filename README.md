@@ -38,6 +38,4 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-[x] - Login
-[x] - Logout
-[x] - Refresh token
+[] - Crear servicio multiusuario

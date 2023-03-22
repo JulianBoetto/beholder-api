@@ -32,7 +32,7 @@ export class ExchangeService {
         return result;
       })
       .catch((err) => {
-        // this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
+        this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
       });
   }
 
@@ -74,7 +74,7 @@ export class ExchangeService {
       //     res.json(info);
       // return info;
     } catch (err) {
-      // this.logger.info(err.message);
+      this.logger.info(err.message);
       return new BadRequestException(err.message);
     }
   }
@@ -88,7 +88,7 @@ export class ExchangeService {
       })
       .catch((err) => {
         console.log(err);
-        // this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
+        this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
       });
     return coins;
   }

@@ -1,33 +1,66 @@
+import { KlineInterval, WsMessageKlineFormatted, Kline } from 'binance';
+
 export interface OriginalKline {
-  e: string;
-  k: { c: string; h: string; l: string; o: string; v: string, t: number };
-  E: number;
-  s: string;
-  wsKey: string;
-  wsMarket: string;
+  startTime: number;
+  endTime: number;
+  symbol: string;
+  interval: KlineInterval;
+  firstTradeId: number;
+  lastTradeId: number;
+  open: number;
+  close: number;
+  high: number;
+  low: number;
+  volume: number;
+  trades: number;
+  final: false;
+  quoteVolume: number;
+  volumeActive: number;
+  quoteVolumeActive: number;
+  ignored: number;
 }
 
 export interface FormatedKline {
-    open: string,
-    close: string,
-    low: string,
-    high: string,
-    volume: string,
-    // time: number,
+  0: number;
+  1: string;
+  2: string;
+  3: string;
+  4: string;
+  5: string;
 }
 
-export function toFormatKline(kline: OriginalKline) {
-  const newKline = toFormatOhlc(kline);
-  return newKline;
+export function wsToFormatKline(kline: WsMessageKlineFormatted) {
+  return toFormatOhlc(kline.kline);
+}
+
+export function toFormatWsKline(kline: WsMessageKlineFormatted) {
+  const klineFormated: any = toFormatWs(kline.kline);
+  return klineFormated;
+}
+
+export function strToNumber(value: string | number) {
+  if(typeof value === 'string') {
+    return parseFloat(value)
+  } else return value;
 }
 
 function toFormatOhlc(kline: OriginalKline) {
   return {
-    open: kline.k.o,
-    close: kline.k.c,
-    low: kline.k.l,
-    high: kline.k.h,
-    volume: kline.k.v,
-    // time: kline.k.t
+    open: kline.open,
+    close: kline.close,
+    low: kline.low,
+    high: kline.high,
+    volume: kline.volume,
   };
+}
+
+function toFormatWs(kline: OriginalKline) {
+  return [
+    kline.startTime,
+    `${kline.open}`,
+    `${kline.high}`,
+    `${kline.low}`,
+    `${kline.close}`,
+    `${kline.volume}`,
+  ];
 }

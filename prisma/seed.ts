@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { encryptData } from '../src/utils/encrypt';
-import { monitorTypes } from 'src/utils/monitorTypes';
+import { monitorTypes } from '../src/utils/monitorTypes';
 
 const prisma = new PrismaClient();
 async function main() {
@@ -138,10 +138,28 @@ async function main() {
       updatedAt: new Date(),
     },
   });
+
+  const tickerMonitor = await prisma.monitor.upsert({
+    where: { id: 5 },
+    update: {},
+    create: {
+      type: monitorTypes.TICKER,
+      broadcastLabel: '',
+      symbol: 'BTCUSDT',
+      interval: '',
+      isActive: true,
+      isSystemMon: false,
+      indexes: '',
+      logs: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
   console.log('Monitor MINI_TICKER: ', { miniTickerMonitor });
   console.log('Monitor BOOK: ', { bookMonitor });
   console.log('Monitor USER_DATA: ', { userDataMonitor });
   console.log('Monitor CANDLES: ', { candlesMonitor });
+  console.log('Monitor TICKER: ', { tickerMonitor });
 }
 
 main()

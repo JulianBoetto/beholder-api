@@ -1,11 +1,5 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import {
-  AccountInformation,
-  Kline,
-  WsMessage24hrMiniTickerFormatted,
-  WsMessage24hrTickerFormatted,
-  WsMessageKlineFormatted,
-} from 'binance';
+import { AccountInformation, Kline, WsMessageKlineFormatted } from 'binance';
 import { BeholderService } from 'src/beholder/beholder.service';
 import { ExchangeService } from 'src/exchange/exchange.service';
 import { IndicatorsService } from 'src/indicators/indicators.service';
@@ -26,7 +20,11 @@ import {
 import { toKlineInterval } from 'src/utils/types/klineIntervalTypes';
 import { Logger } from 'winston';
 import { Monitor } from './entities/monitor.entity';
-import { MiniTicker, formatedOrder } from 'src/utils/types/formatedTicker';
+import {
+  MiniTicker,
+  WsMessage24hrTickerFormatted,
+  formatedOrder,
+} from 'src/utils/types/formatedTicker';
 
 @Injectable()
 export class MonitorsService implements OnModuleInit {
@@ -95,8 +93,13 @@ export class MonitorsService implements OnModuleInit {
               monitor.broadcastLabel,
               monitor.logs,
             );
-          // case monitorTypes.TICKER:
-          //     return startTickerMonitor(monitor.id, monitor.symbol, monitor.broadcastLabel, monitor.logs);
+          case monitorTypes.TICKER:
+            return this.startTickerMonitor(
+              monitor.id,
+              monitor.symbol,
+              monitor.broadcastLabel,
+              monitor.logs,
+            );
         }
       }, 250); // Binance only permits 5 commands / second
     });
@@ -107,7 +110,83 @@ export class MonitorsService implements OnModuleInit {
     //     await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy, false);
     // }))
 
-    // this.logger.info('App Exchange Monitor is running!');
+    this.logger.info('App Exchange Monitor is running!');
+  }
+
+  startTickerMonitor(
+    monitorId: number,
+    symbol: string,
+    broadcastLabel: string,
+    logs: boolean,
+  ) {
+    if (!symbol)
+      return new Error("You can't start a Ticker Monitor without a symbol!");
+
+    this.exchangeService.tickerStream(
+      this.settings,
+      symbol,
+      async (data: WsMessage24hrTickerFormatted) => {
+        if (logs)
+          this.logger.info(`Monitor ${monitorId}: ${JSON.stringify(data)}`);
+
+        try {
+          const ticker = this.getLightTicker({ ...data });
+          const currentMemory = this.beholderService.getMemory(
+            symbol,
+            indexKeys.TICKER,
+          );
+
+          const newMemory = { previous: {}, current: {} };
+          newMemory.previous = currentMemory ? currentMemory.current : ticker;
+          newMemory.current = ticker;
+
+          const results = await this.beholderService.updateMemory(
+            data.symbol,
+            indexKeys.TICKER,
+            null,
+            newMemory,
+          );
+
+          // if (results) results.map(result => sendMessage({ notification: result }));
+
+          // if (WSS && broadcastLabel) sendMessage({ [broadcastLabel]: data });
+        } catch (err) {
+          if (logs) this.logger.info(`Monitor ${monitorId}: ${err}`);
+        }
+      },
+    );
+    this.logger.info(
+      `Monitor ${monitorId}: Ticker Monitor has started for ${symbol}`,
+    );
+  }
+
+  private getLightTicker(data: WsMessage24hrTickerFormatted) {
+    data.averagePrice = data.weightedAveragePrice;
+    data.prevClose = data.previousClose;
+    data.close = data.currentClose;
+    data.percentChange = data.priceChangePercent;
+    
+    delete data.eventType;
+    delete data.eventTime;
+    delete data.symbol;
+    delete data.openTime;
+    delete data.closeTime;
+    delete data.firstTradeId;
+    delete data.lastTradeId;
+    delete data.trades;
+    delete data.quoteAssetVolume;
+    delete data.closeQuantity;
+    delete data.bestBidQuantity;
+    delete data.bestAskQuantity;
+    delete data.baseAssetVolume;
+    delete data.wsKey;
+    delete data.wsMarket;
+    delete data.priceChangePercent;
+    delete data.weightedAveragePrice;
+    delete data.previousClose;
+    delete data.currentClose;
+
+    return data;
   }
 
   async startChartMonitor(
@@ -434,7 +513,7 @@ export class MonitorsService implements OnModuleInit {
               indexKeys.BOOK,
             );
 
-            const newMemory: any = {};
+            const newMemory = { previous: {}, current: {} };
             newMemory.previous = currentMemory ? currentMemory.current : book;
             newMemory.current = book;
 

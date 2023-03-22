@@ -15,7 +15,6 @@ import { SymbolsModule } from './symbols/symbols.module';
 import { UsersModule } from './users/users.module';
 import { BeholderModule } from './beholder/beholder.module';
 import { AutomationsModule } from './automations/automations.module';
-import { ExchangeMonitorModule } from './exchange-monitor/exchange-monitor.module';
 import { WsAdapter } from './utils/webSocket';
 import { OrdersModule } from './orders/orders.module';
 import { IndicatorsModule } from './indicators/indicators.module';
@@ -32,7 +31,6 @@ import { IndicatorsModule } from './indicators/indicators.module';
     ExchangeModule,
     BeholderModule,
     AutomationsModule,
-    ExchangeMonitorModule,
     OrdersModule,
     IndicatorsModule,
   ],

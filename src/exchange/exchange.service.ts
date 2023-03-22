@@ -135,17 +135,12 @@ export class ExchangeService {
     }
   }
 
-  async userDataStream(settings: Setting, callback) {
+  userDataStream(settings: Setting, callback) {
     const wsClient = BinanceWS(settings, callback);
     wsClient.subscribeSpotUserDataStream();
   }
 
-  async chartStream(
-    settings: Setting,
-    symbol: string,
-    interval: string,
-    callback,
-  ) {
+  chartStream(settings: Setting, symbol: string, interval: string, callback) {
     const wsClient = BinanceWS(settings, callback);
     const intervalKline =
       typeof interval === 'string' ? toKlineInterval(interval) : '1m';
@@ -155,5 +150,10 @@ export class ExchangeService {
   async getKlines(settings: Setting, params: KlinesParams) {
     const klines = await this.client(settings).getKlines(params);
     return klines;
+  }
+
+  tickerStream(settings: Setting, symbol: string, callback) {
+    const wsClient = BinanceWS(settings, callback);
+    wsClient.subscribeSpotSymbol24hrTicker(symbol, true);
   }
 }

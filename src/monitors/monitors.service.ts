@@ -165,7 +165,7 @@ export class MonitorsService implements OnModuleInit {
     data.prevClose = data.previousClose;
     data.close = data.currentClose;
     data.percentChange = data.priceChangePercent;
-    
+
     delete data.eventType;
     delete data.eventTime;
     delete data.symbol;
@@ -215,7 +215,7 @@ export class MonitorsService implements OnModuleInit {
             symbol,
             interval: intervalKline,
             // LIMIT FOR KLINES
-            limit: 500,
+            limit: parseInt(process.env.LIMIT_KLINES) || 500,
           };
           previousKlines = await this.exchangeService.getKlines(
             this.settings,
@@ -234,26 +234,6 @@ export class MonitorsService implements OnModuleInit {
         }
 
         const lastCandle = ohlc;
-        // console.log(
-        //   originalWsKline.kline.startTime,
-        //   lastCandle.close,
-        //   originalWsKline.kline.endTime,
-        // );
-        // console.log(
-        //   previousKlines[previousKlines.length - 2][0],
-        //   previousKlines[previousKlines.length - 2][4],
-        //   previousKlines[previousKlines.length - 2][6],
-        // );
-        // console.log(
-        //   previousKlines[previousKlines.length - 3][0],
-        //   previousKlines[previousKlines.length - 3][4],
-        //   previousKlines[previousKlines.length - 3][6],
-        // );
-        // console.log(
-        //   previousKlines[previousKlines.length - 4][0],
-        //   previousKlines[previousKlines.length - 4][4],
-        //   previousKlines[previousKlines.length - 4][6],
-        // );
 
         const previousCandle = {
           open: strToNumber(previousKlines[previousKlines.length - 2][1]),
@@ -291,7 +271,7 @@ export class MonitorsService implements OnModuleInit {
             { current: previousCandle, previous: previousPreviousCandle },
             false,
           );
-          // //   // if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: lastCandle });
+          // if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: lastCandle });
           let results: any = await this.processChartData(
             monitorId,
             symbol,
@@ -409,7 +389,13 @@ export class MonitorsService implements OnModuleInit {
       await this.loadWallet();
 
       this.exchangeService.userDataStream(this.settings, (data) => {
-        this.processBalanceData(monitorId, balanceBroadcast, logs, data);
+        if (data.e === 'executionReport')
+          this.processExecutionData(monitorId, data, executionBroadcast);
+        else if (
+          data.e === 'balanceUpdate' ||
+          data.e === 'outboundAccountPosition'
+        )
+          this.processBalanceData(monitorId, balanceBroadcast, logs, data);
       });
       this.logger.info(
         `Monitor ${monitorId}: User Data Monitor has started at ${broadcastLabel}`,

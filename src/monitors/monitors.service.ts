@@ -25,6 +25,7 @@ import {
   WsMessage24hrTickerFormatted,
   formatedOrder,
 } from 'src/utils/types/formatedTicker';
+import { Order } from 'src/orders/entities/order.entity';
 
 @Injectable()
 export class MonitorsService implements OnModuleInit {
@@ -47,7 +48,7 @@ export class MonitorsService implements OnModuleInit {
   private symbols: any = [];
 
   onModuleInit() {
-    this.init();
+    // this.init();
   }
 
   async init() {
@@ -88,7 +89,8 @@ export class MonitorsService implements OnModuleInit {
             return this.startChartMonitor(
               monitor.id,
               monitor.symbol,
-              monitor.interval,
+              "5m",
+              // monitor.interval,
               monitor.indexes ? monitor.indexes.split(',') : [],
               monitor.broadcastLabel,
               monitor.logs,
@@ -104,13 +106,44 @@ export class MonitorsService implements OnModuleInit {
       }, 250); // Binance only permits 5 commands / second
     });
 
-    // const lastOrders = await getLastFilledOrders();
-    // await Promise.all(lastOrders.map(async (order) => {
-    //     const orderCopy = getLightOrder(order.get({ plain: true }));
-    //     await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy, false);
-    // }))
+    const lastOrders = await this.ordersService.getLastFilledOrders();
+    await Promise.all(
+      lastOrders.map(async (order) => {
+        const orderCopy = this.getLightOrder(order);
+        await this.beholderService.updateMemory(
+          order.symbol,
+          indexKeys.LAST_ORDER,
+          null,
+          orderCopy,
+          false,
+        );
+      }),
+    );
 
     this.logger.info('App Exchange Monitor is running!');
+  }
+
+  private getLightOrder(order: Order) {
+    const orderCopy = order;
+    delete orderCopy.id;
+    delete orderCopy.automationId;
+    delete orderCopy.orderId;
+    delete orderCopy.clientOrderId;
+    delete orderCopy.transactTime;
+    delete orderCopy.isMaker;
+    delete orderCopy.commission;
+    delete orderCopy.obs;
+    delete orderCopy.automation;
+    delete orderCopy.createdAt;
+    delete orderCopy.updatedAt;
+
+    // orderCopy.limitPrice = orderCopy.limitPrice ? parseFloat(orderCopy.limitPrice) : null;
+    // orderCopy.stopPrice = orderCopy.stopPrice ? parseFloat(orderCopy.stopPrice) : null;
+    // orderCopy.avgPrice = orderCopy.avgPrice ? parseFloat(orderCopy.avgPrice) : null;
+    // orderCopy.net = orderCopy.net ? parseFloat(orderCopy.net) : null;
+    // orderCopy.quantity = orderCopy.quantity ? parseFloat(orderCopy.quantity) : null;
+    // orderCopy.icebergQty = orderCopy.icebergQuantity ? parseFloat(orderCopy.icebergQuantity) : null;
+    return orderCopy;
   }
 
   startTickerMonitor(
@@ -206,111 +239,127 @@ export class MonitorsService implements OnModuleInit {
       symbol,
       interval,
       async (originalWsKline: WsMessageKlineFormatted) => {
-        const ohlc = wsToFormatKline(originalWsKline);
+        // Bloquea las funciones si aun no pasó el tiempo definido en 'interval'
+        let intervalLocked: boolean = true;
 
+        // Ultimo kline
+        const ohlc = wsToFormatKline(originalWsKline);
+        const wsKlines: Kline = toFormatWsKline(originalWsKline);
+
+        // Comprueba si es el primer Kline recibido
         if (!previousKlines.length) {
           const intervalKline =
             typeof interval === 'string' ? toKlineInterval(interval) : '1m';
           const params = {
             symbol,
             interval: intervalKline,
+
             // LIMIT FOR KLINES
             limit: parseInt(process.env.LIMIT_KLINES) || 500,
           };
+
+          // Solicita los últimos 500 klines o la cantidad que haya sido configurada en el .evn
           previousKlines = await this.exchangeService.getKlines(
             this.settings,
             params,
           );
+
+          // Agrega el último kline
+          // previousKlines.push(wsKlines);
         } else {
-          const wsKlines: Kline = toFormatWsKline(originalWsKline);
           if (
             originalWsKline.kline.startTime !==
             previousKlines[previousKlines.length - 1][0]
           ) {
+            intervalLocked = false;
             previousKlines.push(wsKlines);
             previousKlines.shift();
+          } else {
+            intervalLocked = true;
           }
           previousKlines[previousKlines.length - 1] = wsKlines;
         }
 
-        const lastCandle = ohlc;
+        if (!intervalLocked) {
+          const lastCandle = ohlc;
 
-        const previousCandle = {
-          open: strToNumber(previousKlines[previousKlines.length - 2][1]),
-          close: strToNumber(previousKlines[previousKlines.length - 2][4]),
-          high: strToNumber(previousKlines[previousKlines.length - 2][2]),
-          low: strToNumber(previousKlines[previousKlines.length - 2][3]),
-          volume: strToNumber(previousKlines[previousKlines.length - 2][5]),
-        };
+          const previousCandle = {
+            open: strToNumber(previousKlines[previousKlines.length - 2][1]),
+            close: strToNumber(previousKlines[previousKlines.length - 2][4]),
+            high: strToNumber(previousKlines[previousKlines.length - 2][2]),
+            low: strToNumber(previousKlines[previousKlines.length - 2][3]),
+            volume: strToNumber(previousKlines[previousKlines.length - 2][5]),
+          };
 
-        const previousPreviousCandle = {
-          open: strToNumber(previousKlines[previousKlines.length - 3][1]),
-          close: strToNumber(previousKlines[previousKlines.length - 3][4]),
-          high: strToNumber(previousKlines[previousKlines.length - 3][2]),
-          low: strToNumber(previousKlines[previousKlines.length - 3][3]),
-          volume: strToNumber(previousKlines[previousKlines.length - 3][5]),
-        };
+          const previousPreviousCandle = {
+            open: strToNumber(previousKlines[previousKlines.length - 3][1]),
+            close: strToNumber(previousKlines[previousKlines.length - 3][4]),
+            high: strToNumber(previousKlines[previousKlines.length - 3][2]),
+            low: strToNumber(previousKlines[previousKlines.length - 3][3]),
+            volume: strToNumber(previousKlines[previousKlines.length - 3][5]),
+          };
 
-        if (logs)
-          this.logger.info(
-            `Monitor ${monitorId}: ${JSON.stringify(lastCandle)}`,
-          );
+          if (logs)
+            this.logger.info(
+              `Monitor ${monitorId}: ${JSON.stringify(lastCandle)} ${new Date}`,
+            );
 
-        try {
-          this.beholderService.updateMemory(
-            symbol,
-            indexKeys.LAST_CANDLE,
-            interval,
-            { current: lastCandle, previous: previousCandle },
-            false,
-          );
-          this.beholderService.updateMemory(
-            symbol,
-            indexKeys.PREVIOUS_CANDLE,
-            interval,
-            { current: previousCandle, previous: previousPreviousCandle },
-            false,
-          );
-          // if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: lastCandle });
-          let results: any = await this.processChartData(
-            monitorId,
-            symbol,
-            indexes,
-            interval,
-            previousKlines,
-            logs,
-          );
-          results.push(
-            await this.beholderService.testAutomations(
-              this.beholderService.parseMemoryKey(
-                symbol,
-                indexKeys.LAST_CANDLE,
-                interval,
+          try {
+            this.beholderService.updateMemory(
+              symbol,
+              indexKeys.LAST_CANDLE,
+              interval,
+              { current: lastCandle, previous: previousCandle },
+              false,
+            );
+            this.beholderService.updateMemory(
+              symbol,
+              indexKeys.PREVIOUS_CANDLE,
+              interval,
+              { current: previousCandle, previous: previousPreviousCandle },
+              false,
+            );
+            // if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: lastCandle });
+            let results: any = await this.processChartData(
+              monitorId,
+              symbol,
+              indexes,
+              interval,
+              previousKlines,
+              logs,
+            );
+            results.push(
+              await this.beholderService.testAutomations(
+                this.beholderService.parseMemoryKey(
+                  symbol,
+                  indexKeys.LAST_CANDLE,
+                  interval,
+                ),
               ),
-            ),
-          );
-          results.push(
-            await this.beholderService.testAutomations(
-              this.beholderService.parseMemoryKey(
-                symbol,
-                indexKeys.PREVIOUS_CANDLE,
-                interval,
+            );
+            results.push(
+              await this.beholderService.testAutomations(
+                this.beholderService.parseMemoryKey(
+                  symbol,
+                  indexKeys.PREVIOUS_CANDLE,
+                  interval,
+                ),
               ),
-            ),
-          );
-          if (results) {
-            if (logs) {
-              const resultsStr = results.map((result) =>
-                result.length === 0 ? false : result,
-              );
-              this.logger.info(
-                `Monitor ${monitorId}: ChartStream Results: ${resultsStr.flat()}`,
-              );
+            );
+            if (results) {
+              if (logs) {
+                const resultsStr = results.map((result) =>
+                  result.length === 0 ? false : result,
+                );
+                this.logger.info(
+                  `Monitor ${monitorId}: ChartStream Results: ${resultsStr.flat()}`,
+                );
+              }
+              // results.flat().map((result) => sendMessage({ notification: result }));
             }
-            // results.flat().map((result) => sendMessage({ notification: result }));
+          } catch (err) {
+            this.logger.info(`Monitor ${monitorId}: ${err}`);
           }
-        } catch (err) {
-          this.logger.info(`Monitor ${monitorId}: ${err}`);
         }
       },
     );

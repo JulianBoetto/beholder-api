@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { encryptData } from '../src/utils/encrypt';
 import { monitorTypes } from '../src/utils/monitorTypes';
+import actionsTypes from '../src/utils/types/actionsTypes';
 
 const prisma = new PrismaClient();
 async function main() {
@@ -62,7 +63,7 @@ async function main() {
       symbol: 'BTCUSDT',
       indexes: 'BTCUSDT:RSI_1m',
       schedule: '',
-      conditions: '',
+      conditions: "MEMORY['BTCUSDT:RSI_14_1m'].current>65",
       isActive: false,
       logs: false,
       createdAt: new Date(),
@@ -70,6 +71,18 @@ async function main() {
     },
   });
   console.log('Automation: ', { automation });
+
+  const action = await prisma.action.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      automationId: 1,
+      type: actionsTypes.ALERT_EMAIL,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+  console.log('Action: ', { action });
 
   const miniTickerMonitor = await prisma.monitor.upsert({
     where: { id: 1 },

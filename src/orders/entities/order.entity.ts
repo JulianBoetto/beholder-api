@@ -1,19 +1,21 @@
+import { Decimal } from "@prisma/client/runtime";
+
 export class Order {
   id: number;
   automationId?: number;
   symbol?: string;
-  orderId?: number;
-  clientOrderId?: number;
-  transactTime?: number;
+  orderId?: BigInt;
+  clientOrderId?: string;
+  transactTime?: BigInt;
   type?: string;
   side?: string;
   status?: string;
   isMaker?: boolean;
   limitPrice?: string;
   stopPrice?: string;
-  avgPrice?: number;
+  avgPrice?: Decimal;
   commission?: string;
-  net?: number;
+  net?: Decimal;
   quantity?: string;
   icebergQty?: string;
   obs?: string;

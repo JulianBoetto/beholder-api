@@ -1,9 +1,15 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Action } from 'src/action/entities/action.entity';
+import { Automation } from 'src/automations/entities/automation.entity';
+import { Grid } from 'src/grid/entities/grid.entity';
+import { UsersService } from 'src/users/users.service';
+import actionsTypes from 'src/utils/types/actionsTypes';
 import { Logger } from 'winston';
 
 @Injectable()
 export class BeholderService {
   @Inject('winston') private logger: Logger;
+  constructor(private usersService: UsersService) {}
 
   private MEMORY: object = {};
   private BRAIN: object;
@@ -25,7 +31,7 @@ export class BeholderService {
       this.BRAIN = {};
       this.BRAIN_INDEX = {};
 
-      automations.map((auto: { isActive: boolean; schedule: string }) => {
+      automations.map((auto: Automation) => {
         if (auto.isActive && !auto.schedule) this.updateBrain(auto);
       });
     } finally {
@@ -34,7 +40,7 @@ export class BeholderService {
         false,
       );
       this.LOCK_MEMORY = false;
-      // this.logger.info(`Beholder Brain has started!`);
+      this.logger.info(`Beholder Brain has started!`);
     }
   }
 
@@ -45,42 +51,41 @@ export class BeholderService {
     this.LOCK_BRAIN[automationId] = value;
   }
 
-  private updateBrain(automation: any) {
+  private updateBrain(automation: Automation) {
     if (!automation.isActive || !automation.conditions) return;
 
-    const actions = automation.actions
-      ? automation.actions.map((a) => {
-          a = a.toJSON ? a.toJSON() : a;
+    const actions: Action[] = automation.action
+      ? automation.action.map((a: Action) => {
+          // a = a.toJSON ? a.toJSON() : a;
           delete a.createdAt;
           delete a.updatedAt;
-          // delete a.orderTemplate;
+          // // delete a.orderTemplate;
           return a;
         })
       : [];
 
-    const grids = automation.grids
-      ? automation.grids.map((g) => {
-          g = g.toJSON ? g.toJSON() : g;
+    const grids: Grid[] = automation.grid
+      ? automation.grid.map((g: Grid) => {
+          // g = g.toJSON ? g.toJSON() : g;
           delete g.createdAt;
           delete g.updatedAt;
           delete g.automationId;
-
-          if (g.orderTemplate) {
-            delete g.orderTemplate.createdAt;
-            delete g.orderTemplate.updateAt;
-          }
-
+          // GRID sin order template
+          // if (g.orderTemplate) {
+          //   delete g.orderTemplate.createdAt;
+          //   delete g.orderTemplate.updateAt;
+          // }
           return g;
         })
       : [];
 
-    if (automation.toJSON) automation = automation.toJSON();
+    // if (automation.toJSON) automation = automation.toJSON();
 
     delete automation.createdAt;
     delete automation.updatedAt;
 
-    automation.actions = actions;
-    automation.grids = grids;
+    automation.action = actions;
+    automation.grid = grids;
 
     this.BRAIN[automation.id] = automation;
     automation.indexes
@@ -179,6 +184,7 @@ export class BeholderService {
   }
 
   async testAutomations(memoryKey: string) {
+    // EX RSI_14_1m, tiene que tener todos los parametros
     const automations = this.findAutomations(memoryKey);
     if (
       !automations ||
@@ -197,32 +203,35 @@ export class BeholderService {
     );
     let results = [];
     try {
-        const promises = automations.map(async (automation) => {
-            let auto = { ...automation };
-            if (auto.symbol.startsWith("*")) {
-                const symbol = memoryKey.split(":")[0];
-                auto.indexes = auto.indexes.replaceAll(auto.symbol, symbol);
-                auto.conditions = auto.conditions.replaceAll(auto.symbol, symbol);
-                if (auto.actions) {
-                    auto.actions.forEach(action => {
-                        if (action.orderTemplate)
-                            action.orderTemplate.symbol = symbol;
-                    })
-                }
-                auto.symbol = symbol;
-            }
-            // return evalDecision(memoryKey, auto);
-        })
-        results = await Promise.all(promises);
-        results = results.flat().filter(r => r);
-        if (!results && !results.length)
-            return [];
-        else
-            return results;
+      const promises = automations.map(async (automation) => {
+        let auto = automation;
+        if (auto.symbol.startsWith('*')) {
+          const symbol = memoryKey.split(':')[0];
+          auto.indexes = auto.indexes.replaceAll(auto.symbol, symbol);
+          auto.conditions = auto.conditions.replaceAll(auto.symbol, symbol);
+          if (auto.actions) {
+            auto.actions.forEach((action) => {
+              if (action.orderTemplate) action.orderTemplate.symbol = symbol;
+            });
+          }
+          auto.symbol = symbol;
+        }
+        return this.evalDecision(memoryKey, auto);
+      });
+      results = await Promise.all(promises);
+      results = results.flat().filter((r) => r);
+      if (!results && !results.length) return [];
+      else return results;
     } finally {
-        setTimeout(() => {
-            this.setLocked(automations.map(a => a.id), false);
-        }, results && results.length ? this.INTERVAL : 0);
+      setTimeout(
+        () => {
+          this.setLocked(
+            automations.map((a) => a.id),
+            false,
+          );
+        },
+        results && results.length ? this.INTERVAL : 0,
+      );
     }
   }
 
@@ -248,5 +257,106 @@ export class BeholderService {
       return typeof result === 'object' ? { ...result } : result;
     }
     return { ...this.MEMORY };
+  }
+
+  private async evalDecision(memoryKey: string, automation: Automation) {
+    if (!automation) return false;
+
+    try {
+      const indexes = automation.indexes ? automation.indexes.split(',') : [];
+
+      if (indexes.length) {
+        const isChecked = indexes.every(
+          (ix) => this.MEMORY[ix] !== null && this.MEMORY[ix] !== undefined,
+        );
+        if (!isChecked) return false;
+
+        const invertedCondition = this.shouldntInvert(automation, memoryKey)
+          ? ''
+          : this.invertCondition(memoryKey, automation.conditions);
+        const evalCondition =
+          automation.conditions +
+          (invertedCondition ? ` && ${invertedCondition}` : '');
+
+        if (this.LOGS)
+          this.logger.info(
+            `Automation ${automation.id}: Beholder is trying to evaluate a condition ${evalCondition}\n at automation: ${automation.name}`,
+          );
+
+        // Compara la condición con los datos de la memoria del Beholder
+        console.log(this.MEMORY['BTCUSDT:RSI_14_1m'], eval("this.MEMORY['BTCUSDT:RSI_14_1m'].current>80 && this.MEMORY['BTCUSDT:RSI_14_1m'].previous<80"))
+        const isValid = evalCondition
+          ? eval(evalCondition.replace(/MEMORY/g, 'this.MEMORY'))
+          : true;
+        if (!isValid) return false;
+      }
+
+      if (!automation.action || !automation.action.length) {
+        if (this.LOGS || automation.logs)
+          this.logger.info(
+            `Automation ${automation.id}: No actions defined for automation ${automation.name}`,
+          );
+        return false;
+      }
+
+      // if ((this.LOGS || automation.logs) && ![actionsTypes.GRID, actionsTypes.TRAILING].includes(automation.action[0].type))
+      //     this.logger.info(`Automation ${automation.id}: Beholder evaluated a condition at automation: ${automation.name}`);
+
+      //     const settings = await settingsRepository .getDefaultSettings();
+      //     let results = [];
+
+      //     for (let i = 0; i < automation.actions.length; i++) {
+      //         const action = automation.actions[i];
+      //         const result = await doAction(this.settings, action, automation);
+      //         if (!result || result.type === "error") break;
+
+      //         results.push(result);
+      //     }
+
+      //     if (automation.logs && results && results.length && results[0])
+      //         logger(`A_${automation.id}`, `Automation ${automation.name} has fired at ${new Date()}!\nResults: ${JSON.stringify(results)}`);
+
+      //     return results.flat();
+    } catch (err) {
+      if (automation.logs)
+        this.logger.info(`Automation ${automation.id}: ${err}`);
+      return {
+        type: 'error',
+        text: `Error at evalDecision for '${automation.name}': ${err.message}`,
+      };
+    }
+  }
+
+  private shouldntInvert(automation: Automation, memoryKey: string) {
+    //return false;//descomente para desabilitar 'double check' (teste de condição invertida)
+    return (
+      ['GRID', 'TRAILING'].includes(automation.action[0].type) ||
+      automation.schedule ||
+      memoryKey.indexOf(':LAST_ORDER') !== -1 ||
+      memoryKey.indexOf(':LAST_CANDLE') !== -1 ||
+      memoryKey.indexOf(':PREVIOUS_CANDLE') !== -1
+    );
+  }
+
+  private invertCondition(memoryKey: string, conditions: string) {
+    const conds = conditions.split(' && ');
+    const condToInvert = conds.find(
+      (c) => c.indexOf(memoryKey) !== -1 && c.indexOf('current') !== -1,
+    );
+    if (!condToInvert) return false;
+
+    if (condToInvert.indexOf('>=') !== -1)
+      return condToInvert.replace('>=', '<').replace(/current/g, 'previous');
+    if (condToInvert.indexOf('<=') !== -1)
+      return condToInvert.replace('<=', '>').replace(/current/g, 'previous');
+    if (condToInvert.indexOf('>') !== -1)
+      return condToInvert.replace('>', '<').replace(/current/g, 'previous');
+    if (condToInvert.indexOf('<') !== -1)
+      return condToInvert.replace('<', '>').replace(/current/g, 'previous');
+    if (condToInvert.indexOf('!') !== -1)
+      return condToInvert.replace('!', '=').replace(/current/g, 'previous');
+    if (condToInvert.indexOf('==') !== -1)
+      return condToInvert.replace('==', '!==').replace(/current/g, 'previous');
+    return false;
   }
 }

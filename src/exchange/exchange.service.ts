@@ -144,7 +144,7 @@ export class ExchangeService {
     const wsClient = BinanceWS(settings, callback);
     const intervalKline =
       typeof interval === 'string' ? toKlineInterval(interval) : '1m';
-    wsClient.subscribeKlines(symbol, intervalKline, 'spot', true);
+    wsClient.subscribeSpotKline(symbol, intervalKline, true);
   }
 
   async getKlines(settings: Setting, params: KlinesParams) {

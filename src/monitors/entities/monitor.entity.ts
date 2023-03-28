@@ -1,5 +1,3 @@
-import { KlineInterval } from "binance";
-
 export class Monitor {
   id: number;
   symbol: string;

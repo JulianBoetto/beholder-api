@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Order } from './entities/order.entity';
 import { orderStatus } from 'src/utils/orderTypes';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -80,5 +81,20 @@ export class OrdersService {
 
     // await this.prisma.order.update(currentOrder);
     return currentOrder;
+  }
+
+  async getLastFilledOrders() {
+    const idObjects = await this.prisma.order.groupBy({
+      by: ['symbol'],
+      where: {
+        status: orderStatus.FILLED,
+      },
+      _max: {
+        id: true,
+      },
+    });
+    let ids: number[] = idObjects.map((o) => o._max.id);
+
+    return this.prisma.order.findMany({ where: { id: { in: ids } } });
   }
 }

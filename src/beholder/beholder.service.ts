@@ -1,7 +1,11 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Action } from 'src/action/entities/action.entity';
 import { Automation } from 'src/automations/entities/automation.entity';
+import { EmailService } from 'src/email/email.service';
 import { Grid } from 'src/grid/entities/grid.entity';
+import { SmsService } from 'src/sms/sms.service';
+import { TelegramService } from 'src/telegram/telegram.service';
+import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import actionsTypes from 'src/utils/types/actionsTypes';
 import { Logger } from 'winston';
@@ -9,7 +13,12 @@ import { Logger } from 'winston';
 @Injectable()
 export class BeholderService {
   @Inject('winston') private logger: Logger;
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private emailService: EmailService,
+    private smsService: SmsService,
+    private telegramService: TelegramService,
+  ) {}
 
   private MEMORY: object = {};
   private BRAIN: object;
@@ -284,10 +293,10 @@ export class BeholderService {
           );
 
         // Compara la condición con los datos de la memoria del Beholder
-        console.log(this.MEMORY['BTCUSDT:RSI_14_1m'], eval("this.MEMORY['BTCUSDT:RSI_14_1m'].current>80 && this.MEMORY['BTCUSDT:RSI_14_1m'].previous<80"))
         const isValid = evalCondition
           ? eval(evalCondition.replace(/MEMORY/g, 'this.MEMORY'))
           : true;
+
         if (!isValid) return false;
       }
 
@@ -299,24 +308,37 @@ export class BeholderService {
         return false;
       }
 
-      // if ((this.LOGS || automation.logs) && ![actionsTypes.GRID, actionsTypes.TRAILING].includes(automation.action[0].type))
-      //     this.logger.info(`Automation ${automation.id}: Beholder evaluated a condition at automation: ${automation.name}`);
+      if (
+        (this.LOGS || automation.logs) &&
+        ![actionsTypes.GRID, actionsTypes.TRAILING].includes(
+          automation.action[0].type,
+        )
+      )
+        this.logger.info(
+          `Automation ${automation.id}: Beholder evaluated a condition at automation: ${automation.name}`,
+        );
 
-      //     const settings = await settingsRepository .getDefaultSettings();
-      //     let results = [];
+      const settings: User = await this.usersService.getSettings(
+        this.usersService.setUserId(),
+      );
+      let results = [];
 
-      //     for (let i = 0; i < automation.actions.length; i++) {
-      //         const action = automation.actions[i];
-      //         const result = await doAction(this.settings, action, automation);
-      //         if (!result || result.type === "error") break;
+      for (let i = 0; i < automation.action.length; i++) {
+        const action = automation.action[i];
+        const result = await this.doAction(settings, action, automation);
+        if (!result || result.type === 'error') break;
 
-      //         results.push(result);
-      //     }
+        results.push(result);
+      }
 
-      //     if (automation.logs && results && results.length && results[0])
-      //         logger(`A_${automation.id}`, `Automation ${automation.name} has fired at ${new Date()}!\nResults: ${JSON.stringify(results)}`);
+      if (automation.logs && results && results.length && results[0])
+        this.logger.info(
+          `Automation ${automation.name} id: ${
+            automation.id
+          } has fired at ${new Date()}!\nResults: ${JSON.stringify(results)}`,
+        );
 
-      //     return results.flat();
+      return results.flat();
     } catch (err) {
       if (automation.logs)
         this.logger.info(`Automation ${automation.id}: ${err}`);
@@ -358,5 +380,35 @@ export class BeholderService {
     if (condToInvert.indexOf('==') !== -1)
       return condToInvert.replace('==', '!==').replace(/current/g, 'previous');
     return false;
+  }
+
+  private doAction(settings: User, action: Action, automation: Automation) {
+    try {
+      switch (action.type) {
+        // case actionsRepository.actionsTypes.ORDER: return placeOrder(settings, automation, action);
+        // case actionsRepository.actionsTypes.TRAILING: return trailingEval(settings, automation, action);
+        case actionsTypes.ALERT_EMAIL:
+          return this.emailService.send(settings, automation);
+        case actionsTypes.ALERT_SMS:
+          return this.smsService.send(settings, automation);
+        case actionsTypes.ALERT_TELEGRAM:
+          return this.telegramService.send(settings, automation);
+        // case actionsRepository.actionsTypes.WITHDRAW: return withdrawCrypto(settings, automation, action);
+        // case actionsRepository.actionsTypes.GRID: return gridEval(settings, automation);
+        default:
+          return false;
+      }
+    } catch (err) {
+      if (automation.logs) {
+        this.logger.info(
+          `Automation ${automation.id}: ${automation.name}:${action.type}`,
+        );
+        this.logger.info(`Automation ${automation.id}: ${err}`);
+      }
+      return {
+        type: 'error',
+        text: `Error at ${automation.name}: ${err.message}`,
+      };
+    }
   }
 }

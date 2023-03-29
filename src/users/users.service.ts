@@ -28,11 +28,15 @@ export class UsersService {
   }
 
   async getSettings(id: number) {
+    this.actualUserId = id;
     return this.prisma.user.findFirst({ where: { id } });
   }
 
   setUserId(id?: number) {
-    if (!id) return this.actualUserId ? this.actualUserId : parseInt(process.env.USER_ID_DEFAULT);
+    if (!id)
+      return this.actualUserId
+        ? this.actualUserId
+        : parseInt(process.env.USER_ID_DEFAULT);
     return (this.actualUserId = id);
   }
 }

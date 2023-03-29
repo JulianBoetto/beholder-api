@@ -89,8 +89,7 @@ export class MonitorsService implements OnModuleInit {
             return this.startChartMonitor(
               monitor.id,
               monitor.symbol,
-              "5m",
-              // monitor.interval,
+              monitor.interval,
               monitor.indexes ? monitor.indexes.split(',') : [],
               monitor.broadcastLabel,
               monitor.logs,
@@ -233,133 +232,135 @@ export class MonitorsService implements OnModuleInit {
     if (!symbol)
       return new Error("You can't start a Chart Monitor without a symbol!");
 
-    let previousKlines: Kline[] = [];
+    let lastKlines: Kline[] = [];
+    let previousWsKlineStartTime: number;
+    // Bloquea las funciones si aun no pasó el tiempo definido en 'interval'
+    let intervalLocked: boolean = true;
     this.exchangeService.chartStream(
       this.settings,
       symbol,
       interval,
-      async (originalWsKline: WsMessageKlineFormatted) => {
-        // Bloquea las funciones si aun no pasó el tiempo definido en 'interval'
-        let intervalLocked: boolean = true;
+      async (wsKline: WsMessageKlineFormatted) => {
+        // El intervalo determina la frecuencia de las actualizaciones de memoria
+        intervalLocked =
+          previousWsKlineStartTime &&
+          wsKline.kline.startTime !== previousWsKlineStartTime;
 
-        // Ultimo kline
-        const ohlc = wsToFormatKline(originalWsKline);
-        const wsKlines: Kline = toFormatWsKline(originalWsKline);
+        previousWsKlineStartTime = wsKline.kline.startTime;
 
-        // Comprueba si es el primer Kline recibido
-        if (!previousKlines.length) {
-          const intervalKline =
-            typeof interval === 'string' ? toKlineInterval(interval) : '1m';
-          const params = {
-            symbol,
-            interval: intervalKline,
+        if (!intervalLocked) return;
 
-            // LIMIT FOR KLINES
-            limit: parseInt(process.env.LIMIT_KLINES) || 500,
-          };
+        // const lastCandle = wsToFormatKline(wsKline);
+        const intervalKline =
+          typeof interval === 'string' ? toKlineInterval(interval) : '1m';
+        const params = {
+          symbol,
+          interval: intervalKline,
+          limit: parseInt(process.env.LIMIT_KLINES) + 1 || 501, // LIMIT FOR KLINES
+        };
 
-          // Solicita los últimos 500 klines o la cantidad que haya sido configurada en el .evn
-          previousKlines = await this.exchangeService.getKlines(
-            this.settings,
-            params,
+        // Solicita los últimos 500 klines o la cantidad que haya sido configurada
+        lastKlines = await this.exchangeService.getKlines(
+          this.settings,
+          params,
+        );
+
+        // Elimina el último elemento (kline del intervalo siguiente, aun sin completar)
+        lastKlines.pop();
+
+        const lastCandle = {
+          open: strToNumber(lastKlines[lastKlines.length - 1][1]),
+          close: strToNumber(lastKlines[lastKlines.length - 1][4]),
+          high: strToNumber(lastKlines[lastKlines.length - 1][2]),
+          low: strToNumber(lastKlines[lastKlines.length - 1][3]),
+          volume: strToNumber(lastKlines[lastKlines.length - 1][5]),
+        };
+
+        // console.log(
+        //   lastKlines[lastKlines.length - 1][4],
+        //   lastKlines[lastKlines.length - 2][4],
+        //   lastKlines[lastKlines.length - 2][4],
+        //   lastKlines[lastKlines.length - 2][0],
+        // lastKlines[lastKlines.length - 3][4],
+        //   lastKlines[lastKlines.length - 3][0],
+        // );
+
+        const previousCandle = {
+          open: strToNumber(lastKlines[lastKlines.length - 2][1]),
+          close: strToNumber(lastKlines[lastKlines.length - 2][4]),
+          high: strToNumber(lastKlines[lastKlines.length - 2][2]),
+          low: strToNumber(lastKlines[lastKlines.length - 2][3]),
+          volume: strToNumber(lastKlines[lastKlines.length - 2][5]),
+        };
+
+        const previousPreviousCandle = {
+          open: strToNumber(lastKlines[lastKlines.length - 3][1]),
+          close: strToNumber(lastKlines[lastKlines.length - 3][4]),
+          high: strToNumber(lastKlines[lastKlines.length - 3][2]),
+          low: strToNumber(lastKlines[lastKlines.length - 3][3]),
+          volume: strToNumber(lastKlines[lastKlines.length - 3][5]),
+        };
+
+        if (logs)
+          this.logger.info(
+            `Monitor ${monitorId}: ${JSON.stringify(lastCandle)}`,
           );
 
-          // Agrega el último kline
-          // previousKlines.push(wsKlines);
-        } else {
-          if (
-            originalWsKline.kline.startTime !==
-            previousKlines[previousKlines.length - 1][0]
-          ) {
-            intervalLocked = false;
-            previousKlines.push(wsKlines);
-            previousKlines.shift();
-          } else {
-            intervalLocked = true;
-          }
-          previousKlines[previousKlines.length - 1] = wsKlines;
-        }
-
-        if (!intervalLocked) {
-          const lastCandle = ohlc;
-
-          const previousCandle = {
-            open: strToNumber(previousKlines[previousKlines.length - 2][1]),
-            close: strToNumber(previousKlines[previousKlines.length - 2][4]),
-            high: strToNumber(previousKlines[previousKlines.length - 2][2]),
-            low: strToNumber(previousKlines[previousKlines.length - 2][3]),
-            volume: strToNumber(previousKlines[previousKlines.length - 2][5]),
-          };
-
-          const previousPreviousCandle = {
-            open: strToNumber(previousKlines[previousKlines.length - 3][1]),
-            close: strToNumber(previousKlines[previousKlines.length - 3][4]),
-            high: strToNumber(previousKlines[previousKlines.length - 3][2]),
-            low: strToNumber(previousKlines[previousKlines.length - 3][3]),
-            volume: strToNumber(previousKlines[previousKlines.length - 3][5]),
-          };
-
-          if (logs)
-            this.logger.info(
-              `Monitor ${monitorId}: ${JSON.stringify(lastCandle)} ${new Date}`,
-            );
-
-          try {
-            this.beholderService.updateMemory(
-              symbol,
-              indexKeys.LAST_CANDLE,
-              interval,
-              { current: lastCandle, previous: previousCandle },
-              false,
-            );
-            this.beholderService.updateMemory(
-              symbol,
-              indexKeys.PREVIOUS_CANDLE,
-              interval,
-              { current: previousCandle, previous: previousPreviousCandle },
-              false,
-            );
-            // if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: lastCandle });
-            let results: any = await this.processChartData(
-              monitorId,
-              symbol,
-              indexes,
-              interval,
-              previousKlines,
-              logs,
-            );
-            results.push(
-              await this.beholderService.testAutomations(
-                this.beholderService.parseMemoryKey(
-                  symbol,
-                  indexKeys.LAST_CANDLE,
-                  interval,
-                ),
+        try {
+          this.beholderService.updateMemory(
+            symbol,
+            indexKeys.LAST_CANDLE,
+            interval,
+            { current: lastCandle, previous: previousCandle },
+            false,
+          );
+          this.beholderService.updateMemory(
+            symbol,
+            indexKeys.PREVIOUS_CANDLE,
+            interval,
+            { current: previousCandle, previous: previousPreviousCandle },
+            false,
+          );
+          // if (broadcastLabel && WSS) sendMessage({ [broadcastLabel]: lastCandle });
+          let results: any = await this.processChartData(
+            monitorId,
+            symbol,
+            indexes,
+            interval,
+            lastKlines,
+            logs,
+          );
+          results.push(
+            await this.beholderService.testAutomations(
+              this.beholderService.parseMemoryKey(
+                symbol,
+                indexKeys.LAST_CANDLE,
+                interval,
               ),
-            );
-            results.push(
-              await this.beholderService.testAutomations(
-                this.beholderService.parseMemoryKey(
-                  symbol,
-                  indexKeys.PREVIOUS_CANDLE,
-                  interval,
-                ),
+            ),
+          );
+          results.push(
+            await this.beholderService.testAutomations(
+              this.beholderService.parseMemoryKey(
+                symbol,
+                indexKeys.PREVIOUS_CANDLE,
+                interval,
               ),
-            );
-            if (results) {
-              if (logs) {
-                const resultsStr = results.map((result) =>
-                  result.length === 0 ? false : result,
-                );
-                this.logger.info(
-                  `Monitor ${monitorId}: ChartStream Results: ${resultsStr.flat()}`,
-                );
-              }
-              // results.flat().map((result) => sendMessage({ notification: result }));
+            ),
+          );
+          if (results) {
+            if (logs) {
+              const resultsStr = results.map((result) =>
+                result.length === 0 ? false : result,
+              );
+              this.logger.info(
+                `Monitor ${monitorId}: ChartStream Results: ${resultsStr.flat()}`,
+              );
             }
-          } catch (err) {
-            this.logger.info(`Monitor ${monitorId}: ${err}`);
+            // results.flat().map((result) => sendMessage({ notification: result }));
           }
+        } catch (err) {
+          this.logger.info(`Monitor ${monitorId}: ${err}`);
         }
       },
     );

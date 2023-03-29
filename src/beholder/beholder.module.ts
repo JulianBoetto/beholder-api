@@ -5,9 +5,10 @@ import { BeholderService } from './beholder.service';
 import { EmailModule } from 'src/email/email.module';
 import { SmsModule } from 'src/sms/sms.module';
 import { TelegramModule } from 'src/telegram/telegram.module';
+import { OrdersModule } from 'src/orders/orders.module';
 
 @Module({
-  imports: [UsersModule, EmailModule, SmsModule, TelegramModule],
+  imports: [UsersModule, EmailModule, SmsModule, TelegramModule, OrdersModule],
   controllers: [BeholderController],
   providers: [BeholderService],
   exports: [BeholderService],

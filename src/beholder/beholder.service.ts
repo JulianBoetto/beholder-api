@@ -3,6 +3,7 @@ import { Action } from 'src/action/entities/action.entity';
 import { Automation } from 'src/automations/entities/automation.entity';
 import { EmailService } from 'src/email/email.service';
 import { Grid } from 'src/grid/entities/grid.entity';
+import { OrdersService } from 'src/orders/orders.service';
 import { SmsService } from 'src/sms/sms.service';
 import { TelegramService } from 'src/telegram/telegram.service';
 import { User } from 'src/users/entities/user.entity';
@@ -18,6 +19,7 @@ export class BeholderService {
     private emailService: EmailService,
     private smsService: SmsService,
     private telegramService: TelegramService,
+    private ordersService: OrdersService,
   ) {}
 
   private MEMORY: object = {};
@@ -297,7 +299,8 @@ export class BeholderService {
           ? eval(evalCondition.replace(/MEMORY/g, 'this.MEMORY'))
           : true;
 
-        if (!isValid) return false;
+        // Solo si la condición es válida continua
+        // if (!isValid) return false;
       }
 
       if (!automation.action || !automation.action.length) {
@@ -385,7 +388,8 @@ export class BeholderService {
   private doAction(settings: User, action: Action, automation: Automation) {
     try {
       switch (action.type) {
-        // case actionsRepository.actionsTypes.ORDER: return placeOrder(settings, automation, action);
+        case actionsTypes.ORDER:
+          return this.ordersService.placeOrder(settings, automation, action);
         // case actionsRepository.actionsTypes.TRAILING: return trailingEval(settings, automation, action);
         case actionsTypes.ALERT_EMAIL:
           return this.emailService.send(settings, automation);

@@ -106,8 +106,8 @@ model withdrawTemplate {
 
 model OrderTemplate {
   id                   Int      @id @default(autoincrement())
-  name                 String   @unique
-  symbol               String   @unique
+  name                 String
+  symbol               String
   type                 String
   side                 String
   limitPrice           String?
@@ -122,6 +122,8 @@ model OrderTemplate {
   updatedAt            DateTime @updatedAt
   action               Action[]
   grid                 Grid[]
+
+  @@unique([name, symbol], name: "orderTemplateIdentifier")
 }
 
 model Action {

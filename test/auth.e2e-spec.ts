@@ -15,6 +15,7 @@ describe('Auth service Int', () => {
     await app.init();
   });
 
+  let access_token: string = '';
   describe('Login', () => {
     it('Success', async () => {
       const response = await request(app.getHttpServer())
@@ -32,9 +33,10 @@ describe('Auth service Int', () => {
       expect(typeof body.access_token).toBe('string');
       expect(typeof body.refresh_token).toBe('string');
       expect(typeof body.pushToken).toBe('string');
+      access_token = body.access_token;
     });
 
-    it('Unauthorized', async () => {
+    it('Unauthorized (incorrect password)', async () => {
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
@@ -47,6 +49,41 @@ describe('Auth service Int', () => {
       expect(text).toEqual(
         '{"statusCode":401,"message":"Email address or password provided is incorrect.","error":"Unauthorized"}',
       );
+    });
+
+    it('Unauthorized (incorrect email)', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'incorrect email',
+          password: process.env.ACCESS_PASSWORD,
+        })
+        .expect(401);
+
+      const { text } = response;
+      expect(text).toEqual(
+        '{"statusCode":401,"message":"Email address or password provided is incorrect.","error":"Unauthorized"}',
+      );
+    });
+  });
+
+  describe('Logout', () => {
+    it('Success', async () => {
+      request(app.getHttpServer())
+        .delete('/auth/logout')
+        .set({
+          Authorization: `Bearer ${access_token}`,
+        })
+        .expect(200);
+    });
+
+    it('Unauthorized (without access token)', async () => {
+      const response = await request(app.getHttpServer())
+        .delete('/auth/logout')
+        .expect(401);
+
+      const { text } = response;
+      expect(text).toEqual('{"statusCode":401,"message":"Unauthorized"}');
     });
   });
 });

@@ -1,10 +1,10 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
+  <a href="https://beholder.julianboetto.lat" target="blank"><img src="./public/images/logo.png" width="200" alt="Beholder Logo" /></a>
 </p>
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+[Beholder multi-coin bot](https://beholder.julianboetto.lat) to create automations and analyze in real time any cryptocurrency on the Binance exchange.
 
 ## Installation
 
@@ -31,11 +31,16 @@ $ npm run start:prod
 # unit tests
 $ npm run test
 
+# integration tests
+$ npm run test:int
+
+Only the first time (initial integration test configuration)
+$ npm run db:restart:test
+$ npm run db:migrate:test
+
 # e2e tests
 $ npm run test:e2e
 
 # test coverage
 $ npm run test:cov
 ```
-
-[] - Crear servicio multiusuario

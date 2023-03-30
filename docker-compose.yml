@@ -1,0 +1,10 @@
+version: '3.9'
+services:
+ test-db:
+  image: mysql:8.0
+  ports:
+    - 3307:3306
+  environment:
+    - MYSQL_DATABASE=test
+    - MYSQL_ROOT_PASSWORD=pwdtest
+  # "pretest:int": "npm run db:restart:test && dotenv -e .env.test -- npx prisma migrate dev",

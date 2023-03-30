@@ -4,6 +4,7 @@ import { Automation } from 'src/automations/entities/automation.entity';
 import { EmailService } from 'src/email/email.service';
 import { Grid } from 'src/grid/entities/grid.entity';
 import { OrdersService } from 'src/orders/orders.service';
+import { SettingsService } from 'src/settings/settings.service';
 import { SmsService } from 'src/sms/sms.service';
 import { TelegramService } from 'src/telegram/telegram.service';
 import { User } from 'src/users/entities/user.entity';
@@ -15,11 +16,12 @@ import { Logger } from 'winston';
 export class BeholderService {
   @Inject('winston') private logger: Logger;
   constructor(
-    private usersService: UsersService,
     private emailService: EmailService,
     private smsService: SmsService,
     private telegramService: TelegramService,
     private ordersService: OrdersService,
+    private settingsService: SettingsService,
+    private usersService: UsersService
   ) {}
 
   private MEMORY: object = {};
@@ -70,6 +72,10 @@ export class BeholderService {
           // a = a.toJSON ? a.toJSON() : a;
           delete a.createdAt;
           delete a.updatedAt;
+          if (a.orderTemplate) {
+            delete a.orderTemplate.createdAt;
+            delete a.orderTemplate.updatedAt;
+          }
           // // delete a.orderTemplate;
           return a;
         })
@@ -84,7 +90,7 @@ export class BeholderService {
           // GRID sin order template
           // if (g.orderTemplate) {
           //   delete g.orderTemplate.createdAt;
-          //   delete g.orderTemplate.updateAt;
+          //   delete g.orderTemplate.updatedAt;
           // }
           return g;
         })
@@ -195,7 +201,7 @@ export class BeholderService {
   }
 
   async testAutomations(memoryKey: string) {
-    // EX RSI_14_1m, tiene que tener todos los parametros
+    // EX BTCUSDT:RSI_14_1m, tiene que tener todos los parametros
     const automations = this.findAutomations(memoryKey);
     if (
       !automations ||
@@ -300,7 +306,7 @@ export class BeholderService {
           : true;
 
         // Solo si la condición es válida continua
-        // if (!isValid) return false;
+        if (!isValid) return false;
       }
 
       if (!automation.action || !automation.action.length) {
@@ -321,7 +327,7 @@ export class BeholderService {
           `Automation ${automation.id}: Beholder evaluated a condition at automation: ${automation.name}`,
         );
 
-      const settings: User = await this.usersService.getSettings(
+      const settings: User = await this.settingsService.getSettingsDecrypted(
         this.usersService.setUserId(),
       );
       let results = [];

@@ -56,9 +56,9 @@ model Order {
   isMaker       Boolean?
   limitPrice    String?
   stopPrice     String?
-  avgPrice      Decimal?    @db.Decimal(18, 8)
+  avgPrice      String?
   commission    String?
-  net           Decimal?    @db.Decimal(18, 8)
+  net           String?
   quantity      String
   icebergQty    String?
   obs           String?
@@ -93,7 +93,7 @@ model withdrawTemplate {
   name             String
   coin             String
   amount           String
-  amountMultiplier Decimal? @db.Decimal(10, 2)
+  amountMultiplier String?
   address          String
   addressTag       String?
   network          String?
@@ -111,13 +111,13 @@ model OrderTemplate {
   type                 String
   side                 String
   limitPrice           String?
-  limitPriceMultiplier Decimal? @db.Decimal(10, 2)
+  limitPriceMultiplier String?
   stopPrice            String?
-  stopPriceMultiplier  Decimal? @db.Decimal(10, 2)
+  stopPriceMultiplier  String?
   quantity             String
-  quantityMultiplier   Decimal? @db.Decimal(10, 2)
+  quantityMultiplier   String?
   icebergQty           String?
-  icebergQtyMultiplier Decimal? @db.Decimal(10, 2)
+  icebergQtyMultiplier String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   action               Action[]

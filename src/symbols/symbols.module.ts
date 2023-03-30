@@ -8,6 +8,7 @@ import { SymbolsService } from './symbols.service';
 @Module({
   imports: [PrismaModule, SettingsModule, ExchangeModule],
   controllers: [SymbolsController],
-  providers: [SymbolsService]
+  providers: [SymbolsService],
+  exports: [SymbolsService]
 })
 export class SymbolsModule { }

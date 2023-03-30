@@ -26,9 +26,10 @@ import {
   formatedOrder,
 } from 'src/utils/types/formatedTicker';
 import { Order } from 'src/orders/entities/order.entity';
+import { FormatedOrder, getLightLastOrder } from 'src/utils/types/orderTypes';
 
 @Injectable()
-export class MonitorsService implements OnModuleInit {
+export class MonitorsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly settingsService: SettingsService,
@@ -46,10 +47,6 @@ export class MonitorsService implements OnModuleInit {
   private settings: Setting;
   private book: any = [];
   private symbols: any = [];
-
-  onModuleInit() {
-    // this.init();
-  }
 
   async init() {
     const settings = await this.settingsService.getSettingsDecrypted(
@@ -107,8 +104,8 @@ export class MonitorsService implements OnModuleInit {
 
     const lastOrders = await this.ordersService.getLastFilledOrders();
     await Promise.all(
-      lastOrders.map(async (order) => {
-        const orderCopy = this.getLightOrder(order);
+      lastOrders.map(async (order: Order) => {
+        const orderCopy: FormatedOrder = getLightLastOrder(order);
         await this.beholderService.updateMemory(
           order.symbol,
           indexKeys.LAST_ORDER,
@@ -120,29 +117,6 @@ export class MonitorsService implements OnModuleInit {
     );
 
     this.logger.info('App Exchange Monitor is running!');
-  }
-
-  private getLightOrder(order: Order) {
-    const orderCopy = order;
-    delete orderCopy.id;
-    delete orderCopy.automationId;
-    delete orderCopy.orderId;
-    delete orderCopy.clientOrderId;
-    delete orderCopy.transactTime;
-    delete orderCopy.isMaker;
-    delete orderCopy.commission;
-    delete orderCopy.obs;
-    delete orderCopy.automation;
-    delete orderCopy.createdAt;
-    delete orderCopy.updatedAt;
-
-    // orderCopy.limitPrice = orderCopy.limitPrice ? parseFloat(orderCopy.limitPrice) : null;
-    // orderCopy.stopPrice = orderCopy.stopPrice ? parseFloat(orderCopy.stopPrice) : null;
-    // orderCopy.avgPrice = orderCopy.avgPrice ? parseFloat(orderCopy.avgPrice) : null;
-    // orderCopy.net = orderCopy.net ? parseFloat(orderCopy.net) : null;
-    // orderCopy.quantity = orderCopy.quantity ? parseFloat(orderCopy.quantity) : null;
-    // orderCopy.icebergQty = orderCopy.icebergQuantity ? parseFloat(orderCopy.icebergQuantity) : null;
-    return orderCopy;
   }
 
   startTickerMonitor(
@@ -158,11 +132,12 @@ export class MonitorsService implements OnModuleInit {
       this.settings,
       symbol,
       async (data: WsMessage24hrTickerFormatted) => {
+        const ticker = this.getLightTicker({ ...data });
+
         if (logs)
-          this.logger.info(`Monitor ${monitorId}: ${JSON.stringify(data)}`);
+          this.logger.info(`Monitor ${monitorId}: ${JSON.stringify(ticker)}`);
 
         try {
-          const ticker = this.getLightTicker({ ...data });
           const currentMemory = this.beholderService.getMemory(
             symbol,
             indexKeys.TICKER,
@@ -275,15 +250,6 @@ export class MonitorsService implements OnModuleInit {
           low: strToNumber(lastKlines[lastKlines.length - 1][3]),
           volume: strToNumber(lastKlines[lastKlines.length - 1][5]),
         };
-
-        // console.log(
-        //   lastKlines[lastKlines.length - 1][4],
-        //   lastKlines[lastKlines.length - 2][4],
-        //   lastKlines[lastKlines.length - 2][4],
-        //   lastKlines[lastKlines.length - 2][0],
-        // lastKlines[lastKlines.length - 3][4],
-        //   lastKlines[lastKlines.length - 3][0],
-        // );
 
         const previousCandle = {
           open: strToNumber(lastKlines[lastKlines.length - 2][1]),

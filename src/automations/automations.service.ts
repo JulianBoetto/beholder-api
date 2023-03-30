@@ -25,7 +25,7 @@ export class AutomationsService implements OnModuleInit {
   async getActiveAutomations() {
     const automations = await this.prisma.automation.findMany({
       where: { isActive: true },
-      include: { grid: true, action: true },
+      include: { grid: true, action: { include: { orderTemplate: true } } },
     });
     return automations;
   }

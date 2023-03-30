@@ -22,7 +22,7 @@ export class SymbolsController {
 
   @Get(':symbol')
   findOne(@Param('symbol') symbol: string) {
-    return this.symbolsService.findOne(symbol);
+    return this.symbolsService.getSymbol(symbol);
   }
 
   @Patch(':symbol')

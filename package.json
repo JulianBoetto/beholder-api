@@ -13,12 +13,12 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:e2e:watch": "jest --config ./test/jest-e2e.json",
+    "test": "dotenv -e .env.test -- jest",
+    "test:watch": "dotenv -e .env.test -- jest --watch",
+    "test:cov": "dotenv -e .env.test -- jest --coverage",
+    "test:debug": "dotenv -e .env.test -- node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "dotenv -e .env.test -- jest --config ./test/jest-e2e.json",
+    "test:e2e:watch": "dotenv -e .env.test -- jest --config ./test/jest-e2e.json",
     "db:migrate:test": "dotenv -e .env.test npx prisma migrate dev && npm run db:seed:test",
     "db:seed:test": "dotenv -e .env.test npx prisma db seed",
     "db:restart:test": "sudo docker compose down && sudo docker compose up -d && sleep 10",
@@ -102,9 +102,6 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "^src/(.*)": "<rootDir>/$1"
-    }
+    "testEnvironment": "node"
   }
 }

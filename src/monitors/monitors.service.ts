@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AccountInformation, Kline, WsMessageKlineFormatted } from 'binance';
 import { BeholderService } from '../beholder/beholder.service';
 import { ExchangeService } from '../exchange/exchange.service';

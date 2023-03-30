@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Action } from '../action/entities/action.entity';
 import { Automation } from '../automations/entities/automation.entity';
 import { EmailService } from '../email/email.service';

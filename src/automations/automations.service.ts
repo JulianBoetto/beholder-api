@@ -15,11 +15,13 @@ export class AutomationsService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.logger.info('Initializing the Beholder Brain...');
-    this.getActiveAutomations().then((automations) => {
-      this.beholder.init(automations);
-      this.monitorsService.init();
-    });
+    if (process.env.NODE_ENV && process.env.NODE_ENV !== 'test') {
+      this.logger.info('Initializing the Beholder Brain...');
+      this.getActiveAutomations().then((automations) => {
+        this.beholder.init(automations);
+        this.monitorsService.init();
+      });
+    }
   }
 
   async getActiveAutomations() {

@@ -18,6 +18,11 @@ import { AutomationsModule } from './automations/automations.module';
 import { WsAdapter } from './utils/webSocket';
 import { OrdersModule } from './orders/orders.module';
 import { IndicatorsModule } from './indicators/indicators.module';
+import { EmailModule } from './email/email.module';
+import { TelegramModule } from './telegram/telegram.module';
+import { SmsService } from './sms/sms.service';
+import { SmsModule } from './sms/sms.module';
+import { OrdersTemplateModule } from './orders-template/orders-template.module';
 
 @Module({
   imports: [
@@ -33,6 +38,10 @@ import { IndicatorsModule } from './indicators/indicators.module';
     AutomationsModule,
     OrdersModule,
     IndicatorsModule,
+    EmailModule,
+    SmsModule,
+    TelegramModule,
+    OrdersTemplateModule,
   ],
   controllers: [AppController],
   providers: [
@@ -45,7 +54,8 @@ import { IndicatorsModule } from './indicators/indicators.module';
       provide: APP_GUARD,
       useClass: AccessTokenGuard
     },
-    WsAdapter
+    WsAdapter,
+    SmsService
   ],
 })
 export class AppModule { }

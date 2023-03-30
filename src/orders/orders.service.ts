@@ -1,11 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { Action } from 'src/action/entities/action.entity';
+import { Automation } from 'src/automations/entities/automation.entity';
+import { ExchangeService } from 'src/exchange/exchange.service';
+import { OrderTemplate } from 'src/orders-template/entities/orderTemplate';
+import { OrdersTemplateService } from 'src/orders-template/orders-template.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Symbol } from 'src/symbols/entities/symbol.entity';
+import { SymbolsService } from 'src/symbols/symbols.service';
+import { User } from 'src/users/entities/user.entity';
+import { orderStatus, orderTypes } from 'src/utils/orderTypes';
+import {
+  LIMIT_TYPES,
+  OrderResponseFull,
+  PlaceOrderType,
+  STOP_TYPES,
+} from 'src/utils/types/orderTypes';
+import { Logger } from 'winston';
 import { Order } from './entities/order.entity';
-import { orderStatus } from 'src/utils/orderTypes';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject('winston') private logger: Logger,
+    private readonly prisma: PrismaService,
+    private ordersTemplateService: OrdersTemplateService,
+    private symbolsService: SymbolsService,
+    private exchangeService: ExchangeService,
+  ) {}
+
   async updateOrderByOrderId(
     orderId: number,
     clientOrderId: number,
@@ -80,5 +102,196 @@ export class OrdersService {
 
     // await this.prisma.order.update(currentOrder);
     return currentOrder;
+  }
+
+  async getLastFilledOrders() {
+    const idObjects = await this.prisma.order.groupBy({
+      by: ['symbol'],
+      where: {
+        status: orderStatus.FILLED,
+      },
+      _max: {
+        id: true,
+      },
+    });
+    let ids: number[] = idObjects.map((o) => o._max.id);
+
+    return this.prisma.order.findMany({ where: { id: { in: ids } } });
+  }
+
+  async placeOrder(settings: User, automation: Automation, action: Action) {
+    if (!settings || !automation || !action) {
+      this.logger.info(
+        `Error in Automation ${automation.id}: All parameters are required to place an older.`,
+      );
+      return {
+        type: 'error',
+        text: `Error in Automation ${automation.id}: All parameters are required to place an older.`,
+      };
+    }
+    if (!action.orderTemplateId) {
+      this.logger.info(
+        `There is no order template for "${automation.name}" id: ${automation.id}, action #${action.id}`,
+      );
+      return {
+        type: 'error',
+        text: `There is no order template for "${automation.name}" id: ${automation.id}, action #${action.id}`,
+      };
+    }
+
+    const orderTemplate: OrderTemplate = action.orderTemplate
+      ? { ...action.orderTemplate }
+      : await this.ordersTemplateService.getOrderTemplate(
+          action.orderTemplateId,
+        );
+
+    if (orderTemplate.type === orderTypes.TRAILING_STOP) {
+      orderTemplate.type = orderTypes.MARKET;
+      orderTemplate.limitPrice = null;
+      orderTemplate.stopPrice = null;
+    }
+
+    const symbol: Symbol = await this.symbolsService.getSymbol(
+      orderTemplate.symbol,
+    );
+
+    const order: PlaceOrderType = {
+      symbol: orderTemplate.symbol.toUpperCase(),
+      side: orderTemplate.side.toUpperCase(),
+      options: {
+        type: orderTemplate.type.toUpperCase(),
+        quoteOrderQty: undefined,
+        stopPrice: undefined,
+      },
+    };
+
+    const isDynamicBuy =
+      order.side === 'BUY' &&
+      ['MIN_NOTIONAL', 'MAX_WALLET'].includes(orderTemplate.quantity);
+    if (
+      order.options.type === 'MARKET' &&
+      (isDynamicBuy || orderTemplate.quantity === 'MIN_NOTIONAL')
+    ) {
+      order.options.quoteOrderQty = await this.calcQuoteQty(
+        orderTemplate,
+        symbol,
+      );
+    } else {
+      const price = this.calcPrice(orderTemplate, symbol, false);
+      // if (!isFinite(price) || !price)
+      //     throw new Error(`Error in calcPrice function, params: OTID ${orderTemplate.id}, $: ${price}, stop: false`);
+      //     if (ordersRepository.LIMIT_TYPES.includes(order.options.type))
+      //         order.limitPrice = price;
+      //     const quantity = calcQty(orderTemplate, price, symbol, false);
+      //     if (!isFinite(quantity) || !quantity)
+      //         throw new Error(`Error is calcQty function, params: OTID ${orderTemplate.id}, $: ${price}, qty: ${quantity}`);
+      //     order.quantity = quantity;
+      //     if (ordersRepository.STOP_TYPES.includes(order.options.type)) {
+      //         const stopPrice = calcPrice(orderTemplate, symbol, true);
+      //         if (!isFinite(stopPrice) || !stopPrice)
+      //             throw new Error(`Error is calcQty function, params: OTID ${orderTemplate.id}, $: ${stopPrice}, stop: true`);
+      //         order.options.stopPrice = stopPrice;
+      //     }
+      //     if (!hasEnoughAssets(symbol, order, price))
+      //         throw new Error(`You wanna ${order.side} ${order.quantity} ${order.symbol} but you haven't enough assets.`);
+    }
+
+    let result: OrderResponseFull | any;
+
+    try {
+      if (order.side === 'BUY')
+        result = await this.exchangeService.orderBuy(
+          settings,
+          order.symbol,
+          order.quantity,
+          order.limitPrice,
+          order.options,
+        );
+      else
+        result = await this.exchangeService.orderSell(
+          settings,
+          order.symbol,
+          order.quantity,
+          order.limitPrice,
+          order.options,
+        );
+    } catch (err) {
+      this.logger.info(
+        `Automation ${automation.id}: ${
+          err.body ? JSON.stringify(err.body) : err
+        }`,
+      );
+      this.logger.info(`Automation ${automation.id}: ${JSON.stringify(order)}`);
+      return {
+        type: 'error',
+        text: `Order failed! ` + err.body ? err.body : err.message,
+      };
+    }
+
+    const savedOrder = await this.prisma.order.create({
+      data: {
+        automationId: automation.id,
+        symbol: order.symbol,
+        quantity: order.quantity || result.executedQty,
+        type: order.options.type,
+        side: order.side,
+        limitPrice: LIMIT_TYPES.includes(order.options.type)
+          ? order.limitPrice
+          : null,
+        stopPrice: STOP_TYPES.includes(order.options.type)
+          ? order.options.stopPrice
+          : null,
+        icebergQty: null,
+        orderId: result.orderId,
+        clientOrderId: result.clientOrderId,
+        transactTime: result.transactTime,
+        status: result.status || 'NEW',
+      },
+    });
+
+    if (automation.logs)
+      this.logger.info(
+        `Automation ${automation.id}: ${JSON.stringify(savedOrder)}`,
+      );
+
+    return {
+      type: 'success',
+      text: `Order #${result.orderId} placed with status ${result.status} from automation ${automation.name}!`,
+    };
+  }
+
+  private async calcQuoteQty(orderTemplate: OrderTemplate, symbol: Symbol) {
+    if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity)) {
+      this.logger.info(
+        `Order Template ${orderTemplate} by ${symbol}: Only MARKET orders can calc quote qty.`,
+      );
+      return;
+    }
+
+    const multiplier = parseFloat(orderTemplate.quantityMultiplier);
+
+    if (orderTemplate.quantity === 'MAX_WALLET') {
+      //     if (orderTemplate.side !== "BUY") throw new Error(`Only MARKET BUY orders can calc quote qty with MAX_WALLET`);
+      //     const asset = MEMORY[`${symbol.quote}:WALLET`];
+      //     if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+      //     return (parseFloat(asset) * (multiplier > 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+    } else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+      const multiplierValue = multiplier < 1 ? 1 : multiplier;
+      const quoteQty = parseFloat(symbol.minNotional) * multiplierValue;
+      return quoteQty.toFixed(symbol.quotePrecision);
+    }
+
+    this.logger.info(
+      `Invalid order template quantity ${orderTemplate.quantity}`,
+    );
+    return;
+  }
+
+  private calcPrice(
+    orderTemplate: OrderTemplate,
+    symbol: Symbol,
+    tipo: boolean,
+  ) {
+    return;
   }
 }

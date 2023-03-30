@@ -1,23 +1,24 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { encryptData } from '../src/utils/encrypt';
 import { monitorTypes } from '../src/utils/monitorTypes';
+import actionsTypes from '../src/utils/types/actionsTypes';
 
 const prisma = new PrismaClient();
 async function main() {
   const password = await bcrypt.hash(process.env.ACCESS_PASSWORD, 10);
   const secretKey = await encryptData(process.env.API_SECRET_BINANCE);
   const twilioToken = await encryptData(process.env.TWILIO_TOKEN);
-  const julian = await prisma.user.upsert({
-    where: { email: 'julib_8724@hotmail.com' },
+  const user = await prisma.user.upsert({
+    where: { email: process.env.EMAIL },
     update: {},
     create: {
-      email: 'julib_8724@hotmail.com',
+      email: process.env.EMAIL,
       password,
-      apiUrl: 'https://testnet.binance.vision',
+      apiUrl: 'https://testnet.binance.vision', // TEST
       accessKey: process.env.API_KEY_BINANCE,
       secretKey,
-      streamUrl: 'wss://testnet.binance.vision',
+      streamUrl: 'wss://testnet.binance.vision', // TEST
       phone: process.env.PHONE,
       sendGridKey: process.env.SENDGRID_KEY,
       twilioSid: process.env.TWILIO_SID,
@@ -31,7 +32,7 @@ async function main() {
       updatedAt: new Date(),
     },
   });
-  console.log('User: ', { julian });
+  console.log('User: ', { user });
 
   const defaultSymbol = 'BTCUSDT';
   const btcusdt = await prisma.symbol.upsert({
@@ -41,8 +42,8 @@ async function main() {
       symbol: defaultSymbol,
       basePrecision: 8,
       quotePrecision: 8,
-      minNotional: '0.1',
-      minLotSize: '0.1',
+      minNotional: '10.00000000',
+      minLotSize: '0.00000100',
       isFavorite: true,
       base: 'BTC',
       quote: 'USDT',
@@ -54,22 +55,113 @@ async function main() {
   });
   console.log('Symbol: ', { btcusdt });
 
-  const automation = await prisma.automation.upsert({
+  const minorAutomation = await prisma.automation.upsert({
     where: { id: 1 },
     update: {},
     create: {
-      name: 'Estratégia infalível',
+      name: 'RSI menor',
       symbol: 'BTCUSDT',
-      indexes: 'BTCUSDT:RSI_1m',
+      indexes: 'BTCUSDT:RSI_14_1m',
       schedule: '',
-      conditions: '',
+      conditions: "MEMORY['BTCUSDT:RSI_14_1m'].current<65",
       isActive: false,
-      logs: false,
+      logs: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
   });
-  console.log('Automation: ', { automation });
+  const majorAutomation = await prisma.automation.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      name: 'RSI Mayor',
+      symbol: 'BTCUSDT',
+      indexes: 'BTCUSDT:RSI_14_1m',
+      schedule: '',
+      conditions: "MEMORY['BTCUSDT:RSI_14_1m'].current>65",
+      isActive: false,
+      logs: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+  console.log('Automation: ', { minorAutomation });
+  console.log('Automation: ', { majorAutomation });
+
+  const orderTemplateBuy = await prisma.orderTemplate.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      name: 'Compra mkt minima',
+      symbol: 'BTCUSDT',
+      type: 'MARKET',
+      side: 'BUY',
+      limitPriceMultiplier: '1.0',
+      stopPriceMultiplier: '1.0',
+      quantity: 'MIN_NOTIONAL',
+      quantityMultiplier: '1.0',
+      icebergQtyMultiplier: '1.0',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+
+  const orderTemplateSell = await prisma.orderTemplate.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      name: 'Venta mkt minima',
+      symbol: 'BTCUSDT',
+      type: 'MARKET',
+      side: 'SELL',
+      limitPriceMultiplier: '1.0',
+      stopPriceMultiplier: '1.0',
+      quantity: 'MIN_NOTIONAL',
+      quantityMultiplier: '1.0',
+      icebergQtyMultiplier: '1.0',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+  console.log('Order Templates: ', { orderTemplateBuy, orderTemplateSell });
+
+  const emailAction = await prisma.action.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      automationId: 1,
+      type: actionsTypes.ALERT_EMAIL,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+
+  const placeOrderBuyAction = await prisma.action.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      automationId: 1,
+      orderTemplateId: 1,
+      type: actionsTypes.ORDER,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+
+  const placeOrderSellAction = await prisma.action.upsert({
+    where: { id: 3 },
+    update: {},
+    create: {
+      automationId: 2,
+      orderTemplateId: 2,
+      type: actionsTypes.ORDER,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+  console.log('Action: ', { emailAction });
+  console.log('Action: ', { placeOrderBuyAction });
+  console.log('Action: ', { placeOrderSellAction });
 
   const miniTickerMonitor = await prisma.monitor.upsert({
     where: { id: 1 },
@@ -130,7 +222,7 @@ async function main() {
       broadcastLabel: '',
       symbol: 'BTCUSDT',
       interval: '1m',
-      isActive: true,
+      isActive: false,
       isSystemMon: false,
       indexes: 'RSI_14',
       logs: false,
@@ -150,7 +242,7 @@ async function main() {
       isActive: true,
       isSystemMon: false,
       indexes: '',
-      logs: true,
+      logs: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },

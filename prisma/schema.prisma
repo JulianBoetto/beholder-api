@@ -11,19 +11,19 @@ model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
   password     String
-  apiUrl       String
-  accessKey    String
-  secretKey    String
-  streamUrl    String
-  phone        String
-  sendGridKey  String
-  twilioSid    String
-  twilioToken  String
-  twilioPhone  String
-  telegramBot  String
-  telegramChat String
-  pushToken    String
-  refreshToken String   @db.LongText
+  apiUrl       String?
+  accessKey    String?
+  secretKey    String?
+  streamUrl    String?
+  phone        String?
+  sendGridKey  String?
+  twilioSid    String?
+  twilioToken  String?
+  twilioPhone  String?
+  telegramBot  String?
+  telegramChat String?
+  pushToken    String?
+  refreshToken String?  @db.LongText
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -32,10 +32,10 @@ model Symbol {
   symbol         String   @unique
   basePrecision  Int
   quotePrecision Int
-  base           String
-  quote          String
-  stepSize       String
-  tickSize       String
+  base           String?
+  quote          String?
+  stepSize       String?
+  tickSize       String?
   minNotional    String
   minLotSize     String
   isFavorite     Boolean  @default(false)
@@ -44,27 +44,27 @@ model Symbol {
 }
 
 model Order {
-  id            Int        @id @default(autoincrement())
-  automationId  Int
+  id            Int         @id @default(autoincrement())
+  automationId  Int?
   symbol        String
-  orderId       Int
-  clientOrderId Int
-  transactTime  BigInt     @db.BigInt
+  orderId       BigInt      @db.BigInt
+  clientOrderId String
+  transactTime  BigInt      @db.BigInt
   type          String
   side          String
   status        String
-  isMaker       Boolean
-  limitPrice    String
-  stopPrice     String
-  avgPrice      Decimal    @db.Decimal(18, 8)
-  commission    String
-  net           Decimal    @db.Decimal(18, 8)
+  isMaker       Boolean?
+  limitPrice    String?
+  stopPrice     String?
+  avgPrice      String?
+  commission    String?
+  net           String?
   quantity      String
-  icebergQty    String
-  obs           String
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  automation    Automation @relation(fields: [automationId], references: [id])
+  icebergQty    String?
+  obs           String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  automation    Automation? @relation(fields: [automationId], references: [id])
 
   @@unique([clientOrderId, orderId], name: "monitorIdentifier")
   @@index([symbol])
@@ -76,7 +76,7 @@ model Automation {
   symbol     String
   indexes    String
   conditions String
-  schedule   String
+  schedule   String?
   isActive   Boolean  @default(false)
   logs       Boolean  @default(false)
   createdAt  DateTime @default(now())
@@ -93,10 +93,10 @@ model withdrawTemplate {
   name             String
   coin             String
   amount           String
-  amountMultiplier Decimal  @db.Decimal(10, 2)
+  amountMultiplier String?
   address          String
-  addressTag       String
-  network          String
+  addressTag       String?
+  network          String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   action           Action[]
@@ -106,35 +106,37 @@ model withdrawTemplate {
 
 model OrderTemplate {
   id                   Int      @id @default(autoincrement())
-  name                 String   @unique
-  symbol               String   @unique
+  name                 String
+  symbol               String
   type                 String
   side                 String
-  limitPrice           String
-  limitPriceMultiplier Decimal  @db.Decimal(10, 2)
-  stopPrice            String
-  stopPriceMultiplier  Decimal  @db.Decimal(10, 2)
+  limitPrice           String?
+  limitPriceMultiplier String?
+  stopPrice            String?
+  stopPriceMultiplier  String?
   quantity             String
-  quantityMultiplier   Decimal  @db.Decimal(10, 2)
-  icebergQty           String
-  icebergQtyMultiplier Decimal  @db.Decimal(10, 2)
+  quantityMultiplier   String?
+  icebergQty           String?
+  icebergQtyMultiplier String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   action               Action[]
   grid                 Grid[]
+
+  @@unique([name, symbol], name: "orderTemplateIdentifier")
 }
 
 model Action {
-  id                 Int              @id @default(autoincrement())
+  id                 Int               @id @default(autoincrement())
   automationId       Int
   type               String
-  orderTemplateId    Int
-  withdrawTemplateId Int
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-  orderTemplate      OrderTemplate    @relation(fields: [orderTemplateId], references: [id])
-  withdrawTemplate   withdrawTemplate @relation(fields: [withdrawTemplateId], references: [id])
-  automation         Automation       @relation(fields: [automationId], references: [id])
+  orderTemplateId    Int?
+  withdrawTemplateId Int?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  orderTemplate      OrderTemplate?    @relation(fields: [orderTemplateId], references: [id])
+  withdrawTemplate   withdrawTemplate? @relation(fields: [withdrawTemplateId], references: [id])
+  automation         Automation        @relation(fields: [automationId], references: [id])
 }
 
 model Grid {
@@ -152,9 +154,9 @@ model Monitor {
   id             Int      @id @default(autoincrement())
   symbol         String   @default("*")
   type           String
-  broadcastLabel String
-  interval       String
-  indexes        String
+  broadcastLabel String?
+  interval       String?
+  indexes        String?
   isActive       Boolean  @default(false)
   isSystemMon    Boolean  @default(false)
   logs           Boolean  @default(false)

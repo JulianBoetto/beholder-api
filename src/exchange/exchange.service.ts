@@ -1,10 +1,17 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { KlinesParams, MainClient } from 'binance';
+import {
+  KlinesParams,
+  MainClient,
+  NewSpotOrderParams,
+  SpotOrder,
+} from 'binance';
 import { Setting } from 'src/settings/entities/setting.entity';
 import { SettingsService } from 'src/settings/settings.service';
+import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { tryFiatConversion } from 'src/utils/fiatConversion';
 import { toKlineInterval } from 'src/utils/types/klineIntervalTypes';
+import { toOrderType } from 'src/utils/types/orderTypes';
 import { BinanceWS } from 'src/utils/webSocket';
 import { Logger } from 'winston';
 
@@ -21,6 +28,7 @@ export class ExchangeService {
       api_key: settings.accessKey,
       api_secret: settings.secretKey,
       baseUrl: settings.apiUrl,
+      recvWindow: 6000
     });
     return client;
   }
@@ -34,6 +42,42 @@ export class ExchangeService {
       .catch((err) => {
         this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
       });
+  }
+
+  async orderBuy(
+    settings: User,
+    symbol: string,
+    quantity: string,
+    limitPrice: string,
+    options: { type: string; quoteOrderQty: string },
+  ) {
+    const params: NewSpotOrderParams = {
+      symbol,
+      side: 'BUY',
+      type: toOrderType(options.type)
+    };
+
+    quantity ? params.quantity = parseFloat(quantity) : params.quoteOrderQty = parseFloat(options.quoteOrderQty);
+
+    return await this.client(settings).submitNewOrder(params); // testNewOrder(params);
+  }
+
+  async orderSell(
+    settings: User,
+    symbol: string,
+    quantity: string,
+    limitPrice: string,
+    options: { type: string; quoteOrderQty: string },
+  ) {
+    const params: NewSpotOrderParams = {
+      symbol,
+      side: 'SELL',
+      type: toOrderType(options.type)
+    };
+
+    quantity ? params.quantity = parseFloat(quantity) : params.quoteOrderQty = parseFloat(options.quoteOrderQty);
+
+    return await this.client(settings).submitNewOrder(params); // submitNewOrder(params);
   }
 
   async getBalance(fiat: string, id: number) {
@@ -130,7 +174,9 @@ export class ExchangeService {
     } catch (err) {
       console.log(err);
       this.logger.info(
-        `getAccountInformation error: ${err.body ? err.body : err}`,
+        `getAccountInformation error: ${
+          err.body ? JSON.stringify(err.body) : err
+        }`,
       );
     }
   }
@@ -144,7 +190,7 @@ export class ExchangeService {
     const wsClient = BinanceWS(settings, callback);
     const intervalKline =
       typeof interval === 'string' ? toKlineInterval(interval) : '1m';
-    wsClient.subscribeKlines(symbol, intervalKline, 'spot', true);
+    wsClient.subscribeSpotKline(symbol, intervalKline, true);
   }
 
   async getKlines(settings: Setting, params: KlinesParams) {

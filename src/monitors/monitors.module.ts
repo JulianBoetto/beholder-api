@@ -21,5 +21,6 @@ import { IndicatorsModule } from 'src/indicators/indicators.module';
   ],
   controllers: [MonitorsController],
   providers: [MonitorsService],
+  exports: [MonitorsService]
 })
 export class MonitorsModule {}

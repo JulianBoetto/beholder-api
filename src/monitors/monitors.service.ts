@@ -25,9 +25,11 @@ import {
   WsMessage24hrTickerFormatted,
   formatedOrder,
 } from 'src/utils/types/formatedTicker';
+import { Order } from 'src/orders/entities/order.entity';
+import { FormatedOrder, getLightLastOrder } from 'src/utils/types/orderTypes';
 
 @Injectable()
-export class MonitorsService implements OnModuleInit {
+export class MonitorsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly settingsService: SettingsService,
@@ -45,10 +47,6 @@ export class MonitorsService implements OnModuleInit {
   private settings: Setting;
   private book: any = [];
   private symbols: any = [];
-
-  onModuleInit() {
-    this.init();
-  }
 
   async init() {
     const settings = await this.settingsService.getSettingsDecrypted(
@@ -104,11 +102,19 @@ export class MonitorsService implements OnModuleInit {
       }, 250); // Binance only permits 5 commands / second
     });
 
-    // const lastOrders = await getLastFilledOrders();
-    // await Promise.all(lastOrders.map(async (order) => {
-    //     const orderCopy = getLightOrder(order.get({ plain: true }));
-    //     await beholder.updateMemory(order.symbol, indexKeys.LAST_ORDER, null, orderCopy, false);
-    // }))
+    const lastOrders = await this.ordersService.getLastFilledOrders();
+    await Promise.all(
+      lastOrders.map(async (order: Order) => {
+        const orderCopy: FormatedOrder = getLightLastOrder(order);
+        await this.beholderService.updateMemory(
+          order.symbol,
+          indexKeys.LAST_ORDER,
+          null,
+          orderCopy,
+          false,
+        );
+      }),
+    );
 
     this.logger.info('App Exchange Monitor is running!');
   }
@@ -126,11 +132,12 @@ export class MonitorsService implements OnModuleInit {
       this.settings,
       symbol,
       async (data: WsMessage24hrTickerFormatted) => {
+        const ticker = this.getLightTicker({ ...data });
+
         if (logs)
-          this.logger.info(`Monitor ${monitorId}: ${JSON.stringify(data)}`);
+          this.logger.info(`Monitor ${monitorId}: ${JSON.stringify(ticker)}`);
 
         try {
-          const ticker = this.getLightTicker({ ...data });
           const currentMemory = this.beholderService.getMemory(
             symbol,
             indexKeys.TICKER,
@@ -200,55 +207,64 @@ export class MonitorsService implements OnModuleInit {
     if (!symbol)
       return new Error("You can't start a Chart Monitor without a symbol!");
 
-    let previousKlines: Kline[] = [];
+    let lastKlines: Kline[] = [];
+    let previousWsKlineStartTime: number;
+    // Bloquea las funciones si aun no pasó el tiempo definido en 'interval'
+    let intervalLocked: boolean = true;
     this.exchangeService.chartStream(
       this.settings,
       symbol,
       interval,
-      async (originalWsKline: WsMessageKlineFormatted) => {
-        const ohlc = wsToFormatKline(originalWsKline);
+      async (wsKline: WsMessageKlineFormatted) => {
+        // El intervalo determina la frecuencia de las actualizaciones de memoria
+        intervalLocked =
+          previousWsKlineStartTime &&
+          wsKline.kline.startTime !== previousWsKlineStartTime;
 
-        if (!previousKlines.length) {
-          const intervalKline =
-            typeof interval === 'string' ? toKlineInterval(interval) : '1m';
-          const params = {
-            symbol,
-            interval: intervalKline,
-            // LIMIT FOR KLINES
-            limit: parseInt(process.env.LIMIT_KLINES) || 500,
-          };
-          previousKlines = await this.exchangeService.getKlines(
-            this.settings,
-            params,
-          );
-        } else {
-          const wsKlines: Kline = toFormatWsKline(originalWsKline);
-          if (
-            originalWsKline.kline.startTime !==
-            previousKlines[previousKlines.length - 1][0]
-          ) {
-            previousKlines.push(wsKlines);
-            previousKlines.shift();
-          }
-          previousKlines[previousKlines.length - 1] = wsKlines;
-        }
+        previousWsKlineStartTime = wsKline.kline.startTime;
 
-        const lastCandle = ohlc;
+        if (!intervalLocked) return;
+
+        // const lastCandle = wsToFormatKline(wsKline);
+        const intervalKline =
+          typeof interval === 'string' ? toKlineInterval(interval) : '1m';
+        const params = {
+          symbol,
+          interval: intervalKline,
+          limit: parseInt(process.env.LIMIT_KLINES) + 1 || 501, // LIMIT FOR KLINES
+        };
+
+        // Solicita los últimos 500 klines o la cantidad que haya sido configurada
+        lastKlines = await this.exchangeService.getKlines(
+          this.settings,
+          params,
+        );
+
+        // Elimina el último elemento (kline del intervalo siguiente, aun sin completar)
+        lastKlines.pop();
+
+        const lastCandle = {
+          open: strToNumber(lastKlines[lastKlines.length - 1][1]),
+          close: strToNumber(lastKlines[lastKlines.length - 1][4]),
+          high: strToNumber(lastKlines[lastKlines.length - 1][2]),
+          low: strToNumber(lastKlines[lastKlines.length - 1][3]),
+          volume: strToNumber(lastKlines[lastKlines.length - 1][5]),
+        };
 
         const previousCandle = {
-          open: strToNumber(previousKlines[previousKlines.length - 2][1]),
-          close: strToNumber(previousKlines[previousKlines.length - 2][4]),
-          high: strToNumber(previousKlines[previousKlines.length - 2][2]),
-          low: strToNumber(previousKlines[previousKlines.length - 2][3]),
-          volume: strToNumber(previousKlines[previousKlines.length - 2][5]),
+          open: strToNumber(lastKlines[lastKlines.length - 2][1]),
+          close: strToNumber(lastKlines[lastKlines.length - 2][4]),
+          high: strToNumber(lastKlines[lastKlines.length - 2][2]),
+          low: strToNumber(lastKlines[lastKlines.length - 2][3]),
+          volume: strToNumber(lastKlines[lastKlines.length - 2][5]),
         };
 
         const previousPreviousCandle = {
-          open: strToNumber(previousKlines[previousKlines.length - 3][1]),
-          close: strToNumber(previousKlines[previousKlines.length - 3][4]),
-          high: strToNumber(previousKlines[previousKlines.length - 3][2]),
-          low: strToNumber(previousKlines[previousKlines.length - 3][3]),
-          volume: strToNumber(previousKlines[previousKlines.length - 3][5]),
+          open: strToNumber(lastKlines[lastKlines.length - 3][1]),
+          close: strToNumber(lastKlines[lastKlines.length - 3][4]),
+          high: strToNumber(lastKlines[lastKlines.length - 3][2]),
+          low: strToNumber(lastKlines[lastKlines.length - 3][3]),
+          volume: strToNumber(lastKlines[lastKlines.length - 3][5]),
         };
 
         if (logs)
@@ -277,7 +293,7 @@ export class MonitorsService implements OnModuleInit {
             symbol,
             indexes,
             interval,
-            previousKlines,
+            lastKlines,
             logs,
           );
           results.push(

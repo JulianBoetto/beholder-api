@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
-import { decryptData } from 'src/utils/encrypt';
+import { UsersService } from '../users/users.service';
+import { decryptData } from '../utils/encrypt';
 
 @Injectable()
 export class SettingsService {

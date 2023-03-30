@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { indexKeys } from 'src/utils/indexes';
-import { strToNumber } from 'src/utils/types/formatedKlines';
+import { indexKeys } from '../utils/indexes';
+import { strToNumber } from '../utils/types/formatedKlines';
 import * as technicalindicators from 'technicalindicators';
 
 @Injectable()

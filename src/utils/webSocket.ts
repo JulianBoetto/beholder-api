@@ -5,10 +5,10 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { AuthService } from 'src/auth/auth.service';
+import { AuthService } from '../auth/auth.service';
 import { Logger } from 'winston';
 import { WebsocketClient } from 'binance';
-import { Setting } from 'src/settings/entities/setting.entity';
+import { Setting } from '../settings/entities/setting.entity';
 
 const WS_PORT: string = process.env.WS_PORT;
 

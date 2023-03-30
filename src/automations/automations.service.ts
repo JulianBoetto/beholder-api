@@ -1,7 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { BeholderService } from 'src/beholder/beholder.service';
-import { MonitorsService } from 'src/monitors/monitors.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { BeholderService } from '../beholder/beholder.service';
+import { MonitorsService } from '../monitors/monitors.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { Logger } from 'winston';
 
 @Injectable()

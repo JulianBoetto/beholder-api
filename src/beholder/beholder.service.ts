@@ -1,15 +1,15 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { Action } from 'src/action/entities/action.entity';
-import { Automation } from 'src/automations/entities/automation.entity';
-import { EmailService } from 'src/email/email.service';
-import { Grid } from 'src/grid/entities/grid.entity';
-import { OrdersService } from 'src/orders/orders.service';
-import { SettingsService } from 'src/settings/settings.service';
-import { SmsService } from 'src/sms/sms.service';
-import { TelegramService } from 'src/telegram/telegram.service';
-import { User } from 'src/users/entities/user.entity';
-import { UsersService } from 'src/users/users.service';
-import actionsTypes from 'src/utils/types/actionsTypes';
+import { Action } from '../action/entities/action.entity';
+import { Automation } from '../automations/entities/automation.entity';
+import { EmailService } from '../email/email.service';
+import { Grid } from '../grid/entities/grid.entity';
+import { OrdersService } from '../orders/orders.service';
+import { SettingsService } from '../settings/settings.service';
+import { SmsService } from '../sms/sms.service';
+import { TelegramService } from '../telegram/telegram.service';
+import { User } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
+import actionsTypes from '../utils/types/actionsTypes';
 import { Logger } from 'winston';
 
 @Injectable()

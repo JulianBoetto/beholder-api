@@ -1,4 +1,4 @@
-import { Setting } from 'src/settings/entities/setting.entity';
+import { Setting } from '../settings/entities/setting.entity';
 
 export default (settings: Setting) => ({
     APIKEY: settings.accessKey,

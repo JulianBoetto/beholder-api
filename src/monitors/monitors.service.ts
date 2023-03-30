@@ -1,32 +1,32 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { AccountInformation, Kline, WsMessageKlineFormatted } from 'binance';
-import { BeholderService } from 'src/beholder/beholder.service';
-import { ExchangeService } from 'src/exchange/exchange.service';
-import { IndicatorsService } from 'src/indicators/indicators.service';
-import { OrdersService } from 'src/orders/orders.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Setting } from 'src/settings/entities/setting.entity';
-import { SettingsService } from 'src/settings/settings.service';
-import { UsersService } from 'src/users/users.service';
-import { indexKeys } from 'src/utils/indexes';
-import { monitorTypes } from 'src/utils/monitorTypes';
-import { orderStatus } from 'src/utils/orderTypes';
+import { BeholderService } from '../beholder/beholder.service';
+import { ExchangeService } from '../exchange/exchange.service';
+import { IndicatorsService } from '../indicators/indicators.service';
+import { OrdersService } from '../orders/orders.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { Setting } from '../settings/entities/setting.entity';
+import { SettingsService } from '../settings/settings.service';
+import { UsersService } from '../users/users.service';
+import { indexKeys } from '../utils/indexes';
+import { monitorTypes } from '../utils/monitorTypes';
+import { orderStatus } from '../utils/orderTypes';
 import {
   FormatedKline,
   strToNumber,
   toFormatWsKline,
   wsToFormatKline,
-} from 'src/utils/types/formatedKlines';
-import { toKlineInterval } from 'src/utils/types/klineIntervalTypes';
+} from '../utils/types/formatedKlines';
+import { toKlineInterval } from '../utils/types/klineIntervalTypes';
 import { Logger } from 'winston';
 import { Monitor } from './entities/monitor.entity';
 import {
   MiniTicker,
   WsMessage24hrTickerFormatted,
   formatedOrder,
-} from 'src/utils/types/formatedTicker';
-import { Order } from 'src/orders/entities/order.entity';
-import { FormatedOrder, getLightLastOrder } from 'src/utils/types/orderTypes';
+} from '../utils/types/formatedTicker';
+import { Order } from '../orders/entities/order.entity';
+import { FormatedOrder, getLightLastOrder } from '../utils/types/orderTypes';
 
 @Injectable()
 export class MonitorsService {

@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Request } from '@nestjs/common';
-import { AuthRequest } from 'src/auth/models/AuthRequest';
+import { AuthRequest } from '../auth/models/AuthRequest';
 import { GetSymbolDto } from './dto/get-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
 import { SymbolsService } from './symbols.service';

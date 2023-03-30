@@ -1,20 +1,20 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Action } from 'src/action/entities/action.entity';
-import { Automation } from 'src/automations/entities/automation.entity';
-import { ExchangeService } from 'src/exchange/exchange.service';
-import { OrderTemplate } from 'src/orders-template/entities/orderTemplate';
-import { OrdersTemplateService } from 'src/orders-template/orders-template.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Symbol } from 'src/symbols/entities/symbol.entity';
-import { SymbolsService } from 'src/symbols/symbols.service';
-import { User } from 'src/users/entities/user.entity';
-import { orderStatus, orderTypes } from 'src/utils/orderTypes';
+import { Action } from '../action/entities/action.entity';
+import { Automation } from '../automations/entities/automation.entity';
+import { ExchangeService } from '../exchange/exchange.service';
+import { OrderTemplate } from '../orders-template/entities/orderTemplate';
+import { OrdersTemplateService } from '../orders-template/orders-template.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { Symbol } from '../symbols/entities/symbol.entity';
+import { SymbolsService } from '../symbols/symbols.service';
+import { User } from '../users/entities/user.entity';
+import { orderStatus, orderTypes } from '../utils/orderTypes';
 import {
   LIMIT_TYPES,
   OrderResponseFull,
   PlaceOrderType,
   STOP_TYPES,
-} from 'src/utils/types/orderTypes';
+} from '../utils/types/orderTypes';
 import { Logger } from 'winston';
 import { Order } from './entities/order.entity';
 

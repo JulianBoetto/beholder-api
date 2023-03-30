@@ -1,5 +1,5 @@
 import { OrderFill, OrderTimeInForce, OrderType } from 'binance';
-import { Order } from 'src/orders/entities/order.entity';
+import { Order } from '../../orders/entities/order.entity';
 
 export interface PlaceOrderType {
   symbol: string;

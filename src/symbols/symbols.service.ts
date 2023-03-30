@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { ExchangeService } from 'src/exchange/exchange.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Setting } from 'src/settings/entities/setting.entity';
-import { SettingsService } from 'src/settings/settings.service';
+import { ExchangeService } from '../exchange/exchange.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { Setting } from '../settings/entities/setting.entity';
+import { SettingsService } from '../settings/settings.service';
 import { symbolsConstants } from './constants';
 import { CreateSymbolDto } from './dto/create-symbol.dto';
 import { GetSymbolDto } from './dto/get-symbol.dto';

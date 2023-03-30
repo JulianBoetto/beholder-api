@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Automation } from 'src/automations/entities/automation.entity';
-import { User } from 'src/users/entities/user.entity';
+import { Automation } from '../automations/entities/automation.entity';
+import { User } from '../users/entities/user.entity';
 import { Logger } from 'winston';
 
 @Injectable()

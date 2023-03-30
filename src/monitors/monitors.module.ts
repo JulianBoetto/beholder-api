@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from 'src/prisma/prisma.module';
-import { SettingsModule } from 'src/settings/settings.module';
-import { UsersModule } from 'src/users/users.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { SettingsModule } from '../settings/settings.module';
+import { UsersModule } from '../users/users.module';
 import { MonitorsController } from './monitors.controller';
 import { MonitorsService } from './monitors.service';
-import { ExchangeModule } from 'src/exchange/exchange.module';
-import { BeholderModule } from 'src/beholder/beholder.module';
-import { OrdersModule } from 'src/orders/orders.module';
-import { IndicatorsModule } from 'src/indicators/indicators.module';
+import { ExchangeModule } from '../exchange/exchange.module';
+import { BeholderModule } from '../beholder/beholder.module';
+import { OrdersModule } from '../orders/orders.module';
+import { IndicatorsModule } from '../indicators/indicators.module';
 
 @Module({
   imports: [

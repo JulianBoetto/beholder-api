@@ -5,14 +5,14 @@ import {
   NewSpotOrderParams,
   SpotOrder,
 } from 'binance';
-import { Setting } from 'src/settings/entities/setting.entity';
-import { SettingsService } from 'src/settings/settings.service';
-import { User } from 'src/users/entities/user.entity';
-import { UsersService } from 'src/users/users.service';
-import { tryFiatConversion } from 'src/utils/fiatConversion';
-import { toKlineInterval } from 'src/utils/types/klineIntervalTypes';
-import { toOrderType } from 'src/utils/types/orderTypes';
-import { BinanceWS } from 'src/utils/webSocket';
+import { Setting } from '../settings/entities/setting.entity';
+import { SettingsService } from '../settings/settings.service';
+import { User } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
+import { tryFiatConversion } from '../utils/fiatConversion';
+import { toKlineInterval } from '../utils/types/klineIntervalTypes';
+import { toOrderType } from '../utils/types/orderTypes';
+import { BinanceWS } from '../utils/webSocket';
 import { Logger } from 'winston';
 
 @Injectable()

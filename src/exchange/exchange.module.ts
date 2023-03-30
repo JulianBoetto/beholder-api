@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ExchangeService } from './exchange.service';
 import { ExchangeController } from './exchange.controller';
-import { UsersModule } from 'src/users/users.module';
-import { SettingsModule } from 'src/settings/settings.module';
+import { UsersModule } from '../users/users.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [UsersModule, SettingsModule],

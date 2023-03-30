@@ -1,5 +1,5 @@
 import { Controller, Get, HttpCode, HttpStatus, Param, Request } from '@nestjs/common';
-import { AuthRequest } from 'src/auth/models/AuthRequest';
+import { AuthRequest } from '../auth/models/AuthRequest';
 import { ExchangeService } from './exchange.service';
 
 @Controller('exchange')

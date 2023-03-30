@@ -18,12 +18,11 @@
     "test:cov": "dotenv -e .env.test -- jest --coverage",
     "test:debug": "dotenv -e .env.test -- node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "dotenv -e .env.test -- jest --config ./test/jest-e2e.json",
-    "test:e2e:watch": "dotenv -e .env.test -- jest --config ./test/jest-e2e.json",
+    "test:e2e:watch": "dotenv -e .env.test -- jest --config ./test/jest-e2e.json --watch",
+    "test:e2e:cov": "dotenv -e .env.test -- jest --config ./test/jest-e2e.json --coverage",
     "db:migrate:test": "dotenv -e .env.test npx prisma migrate dev && npm run db:seed:test",
     "db:seed:test": "dotenv -e .env.test npx prisma db seed",
-    "db:restart:test": "sudo docker compose down && sudo docker compose up -d && sleep 10",
-    "test:int": "dotenv -e .env.test -- jest -i --no-cache --watch --config jest-int.json",
-    "test:int:cov": "dotenv -e .env.test -- jest -i --no-cache --watch --config jest-int.json --coverage"
+    "db:restart:test": "sudo docker compose down && sudo docker compose up -d && sleep 10"
   },
   "dependencies": {
     "@nestjs/axios": "^2.0.0",

@@ -31,15 +31,12 @@ $ npm run start:prod
 # unit tests
 $ npm run test
 
-# integration tests
-$ npm run test:int
-
-Only the first time (initial integration test configuration)
-$ npm run db:restart:test
-$ npm run db:migrate:test
-
 # e2e tests
 $ npm run test:e2e
+
+Only the first time (initial configuration)
+$ npm run db:restart:test
+$ npm run db:migrate:test
 
 # test coverage
 $ npm run test:cov

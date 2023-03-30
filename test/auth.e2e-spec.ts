@@ -5,6 +5,8 @@ import { AppModule } from '../src/app.module';
 
 describe('Auth service Int', () => {
   let app: INestApplication;
+  let access_token: string = '';
+  let refresh_token: string = '';
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -15,7 +17,6 @@ describe('Auth service Int', () => {
     await app.init();
   });
 
-  let access_token: string = '';
   describe('Login', () => {
     it('Success', async () => {
       const response = await request(app.getHttpServer())
@@ -34,6 +35,7 @@ describe('Auth service Int', () => {
       expect(typeof body.refresh_token).toBe('string');
       expect(typeof body.pushToken).toBe('string');
       access_token = body.access_token;
+      refresh_token = body.refresh_token;
     });
 
     it('Unauthorized (incorrect password)', async () => {
@@ -68,7 +70,7 @@ describe('Auth service Int', () => {
   });
 
   describe('Logout', () => {
-    it('Success', async () => {
+    it('Success', () => {
       request(app.getHttpServer())
         .delete('/auth/logout')
         .set({
@@ -80,6 +82,33 @@ describe('Auth service Int', () => {
     it('Unauthorized (without access token)', async () => {
       const response = await request(app.getHttpServer())
         .delete('/auth/logout')
+        .expect(401);
+
+      const { text } = response;
+      expect(text).toEqual('{"statusCode":401,"message":"Unauthorized"}');
+    });
+  });
+
+  describe('Refresh token', () => {
+    it('New access and refresh token', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set({
+          Authorization: `Bearer ${refresh_token}`,
+        });
+
+      const { body } = response;
+      expect(body).toHaveProperty('access_token');
+      expect(body).toHaveProperty('refresh_token');
+      expect(body).toHaveProperty('pushToken');
+      expect(typeof body.access_token).toBe('string');
+      expect(typeof body.refresh_token).toBe('string');
+      expect(typeof body.pushToken).toBe('string');
+    });
+
+    it('Unauthorized (without refresh token)', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/refresh')
         .expect(401);
 
       const { text } = response;

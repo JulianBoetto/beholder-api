@@ -32,11 +32,9 @@ $ npm run start:prod
 $ npm run test
 
 # e2e tests
-$ npm run test:e2e
-
-Only the first time (initial configuration)
 $ npm run db:restart:test
 $ npm run db:migrate:test
+$ npm run test:e2e 
 
 # test coverage
 $ npm run test:cov

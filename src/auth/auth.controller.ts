@@ -32,9 +32,4 @@ export class AuthController {
         const refresh_token = req.user['refresh_token'];
         return this.authService.refreshTokens(userId, refresh_token);
     }
-
-    @Post("test")
-    async testeAccessToken() {
-        return "OK"
-    }
 }

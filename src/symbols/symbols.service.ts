@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
+import {
+  ExchangeInfo,
+  SymbolExchangeInfo,
+  SymbolLotSizeFilter,
+  SymbolMinNotionalFilter,
+  SymbolPriceFilter
+} from 'binance';
 import { ExchangeService } from '../exchange/exchange.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { Setting } from '../settings/entities/setting.entity';
 import { SettingsService } from '../settings/settings.service';
 import { symbolsConstants } from './constants';
 import { CreateSymbolDto } from './dto/create-symbol.dto';
-import { GetSymbolDto } from './dto/get-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
+import { Symbol } from './entities/symbol.entity';
 
 @Injectable()
 export class SymbolsService {
@@ -16,32 +23,45 @@ export class SymbolsService {
     private readonly exhangeService: ExchangeService,
   ) {}
 
-  create(createSymbolDto: CreateSymbolDto) {
-    return 'This action syncs all symbols';
-  }
-
-  async findAll(query: GetSymbolDto) {
-    const { base, quote, page, onlyFavorites } = query;
-
+  async findAll(
+    base?: string,
+    quote?: string,
+    page?: number,
+    onlyFavorites?: string,
+  ) {
     if (base || quote || page || onlyFavorites === 'true')
       return await this.searchSymbols(
         base,
         quote,
         onlyFavorites === 'true',
-        parseInt(page),
-      );
+        page,
+      )
     else return await this.getAllSymbols();
   }
+  create(createSymbolDto: CreateSymbolDto) {
+    return 'This action syncs all symbols';
+  }
 
-  async update(symbol: string, updateSymbolDto: UpdateSymbolDto) {
-    return `This action updates a #${symbol} symbol`;
+  async update(symbol: string, updateSymbol: UpdateSymbolDto) {
+    let symbolBase = await this.prisma.symbol.findUnique({ where: { symbol } });
+    if (
+      updateSymbol.isFavorite !== undefined &&
+      updateSymbol.isFavorite !== symbolBase.isFavorite
+    ) {
+      symbolBase.isFavorite = updateSymbol.isFavorite;
+      return await this.prisma.symbol.update({
+        where: { symbol },
+        data: symbolBase,
+      });
+    }
+    return symbolBase;
   }
 
   async searchSymbols(
     base: string,
     quote: string,
     onlyFavorites: boolean,
-    page: number,
+    page: number = 1,
   ) {
     let options: object = {
       where: {},
@@ -55,10 +75,15 @@ export class SymbolsService {
         ...options,
         where: { quote: quote.toUpperCase(), isFavorite: onlyFavorites },
       };
-    } else {
+    } else if (base) {
       options = {
         ...options,
         where: { base: base.toUpperCase(), isFavorite: onlyFavorites },
+      };
+    } else {
+      options = {
+        ...options,
+        where: { isFavorite: onlyFavorites },
       };
     }
 
@@ -78,40 +103,47 @@ export class SymbolsService {
     });
   }
 
-  async getAllSymbols() {
-    return await this.prisma.symbol.findMany();
+  async getAllSymbols(isFavorite?: boolean) {
+    let options: object;
+    if (isFavorite !== undefined) {
+      options = { where: { isFavorite } };
+    }
+    return await this.prisma.symbol.findMany(options);
   }
 
   async syncSymbols(id: number) {
-    const favoriteSymbols = (await this.getAllSymbols())
-      .filter((s) => s.isFavorite)
-      .map((s) => s.symbol);
-
+    const favoriteSymbols: string[] = (await this.getAllSymbols(true)).map(
+      (s) => s.symbol,
+    );
     const settings: Setting = await this.settingsService.getSettingsDecrypted(
       id,
     );
-    const exchangeInfo: any = await this.exhangeService.exchangeInfo(settings);
-    let symbols: any = exchangeInfo.symbols
-      .map((item: any) => {
+    const exchangeInfo: ExchangeInfo = await this.exhangeService.exchangeInfo(
+      settings,
+    );
+    let symbols: Symbol[] = exchangeInfo.symbols.map(
+      (item: SymbolExchangeInfo) => {
         if (
           (!symbolsConstants.useBlvt && item.baseAsset.endsWith('UP')) ||
           item.baseAsset.endsWith('DOWN')
         )
-          return false;
+          return;
+
         if (
           symbolsConstants.ignoredCoins.includes(item.quoteAsset) ||
           symbolsConstants.ignoredCoins.includes(item.baseAsset)
         )
-          return false;
+          return;
 
-        const minNotionalFilter = item.filters.find(
-          (filter: { filterType: string }) =>
-            filter.filterType === 'MIN_NOTIONAL',
-        );
-        const lotSizeFilter = item.filters.find(
+        const minNotionalFilter: SymbolMinNotionalFilter | any =
+          item.filters.find(
+            (filter: { filterType: string }) =>
+              filter.filterType === 'MIN_NOTIONAL',
+          );
+        const lotSizeFilter: SymbolLotSizeFilter | any = item.filters.find(
           (filter: { filterType: string }) => filter.filterType === 'LOT_SIZE',
         );
-        const priceFilter = item.filters.find(
+        const priceFilter: SymbolPriceFilter | any = item.filters.find(
           (filter: { filterType: string }) =>
             filter.filterType === 'PRICE_FILTER',
         );
@@ -126,10 +158,12 @@ export class SymbolsService {
           tickSize: priceFilter ? priceFilter.tickSize : '1',
           minNotional: minNotionalFilter ? minNotionalFilter.minNotional : '1',
           minLotSize: lotSizeFilter ? lotSizeFilter.minQty : '1',
-          isFavorite: favoriteSymbols.some((s) => s === item.symbol),
+          isFavorite: favoriteSymbols.length
+            ? favoriteSymbols.some((s) => s === item.symbol)
+            : false,
         };
-      })
-      .filter((s: any) => s);
+      },
+    );
 
     if (symbols && symbols.length) {
       await this.prisma.symbol.deleteMany();

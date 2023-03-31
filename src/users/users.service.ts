@@ -36,7 +36,7 @@ export class UsersService {
     if (!id)
       return this.actualUserId
         ? this.actualUserId
-        : parseInt(process.env.USER_ID_DEFAULT);
+        : (this.actualUserId = parseInt(process.env.USER_ID_DEFAULT)) && parseInt(process.env.USER_ID_DEFAULT);
     return (this.actualUserId = id);
   }
 }

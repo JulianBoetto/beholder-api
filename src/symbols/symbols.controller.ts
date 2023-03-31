@@ -1,4 +1,15 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Request,
+} from '@nestjs/common';
 import { AuthRequest } from '../auth/models/AuthRequest';
 import { GetSymbolDto } from './dto/get-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
@@ -6,7 +17,7 @@ import { SymbolsService } from './symbols.service';
 
 @Controller('symbols')
 export class SymbolsController {
-  constructor(private readonly symbolsService: SymbolsService) { }
+  constructor(private readonly symbolsService: SymbolsService) {}
 
   @Post('sync')
   @HttpCode(HttpStatus.OK)
@@ -17,7 +28,8 @@ export class SymbolsController {
 
   @Get()
   findAll(@Query() query: GetSymbolDto) {
-    return this.symbolsService.findAll(query);
+    const { base, quote, page, onlyFavorites } = query;
+    return this.symbolsService.findAll(base, quote, page, onlyFavorites);
   }
 
   @Get(':symbol')
@@ -26,7 +38,10 @@ export class SymbolsController {
   }
 
   @Patch(':symbol')
-  update(@Param('symbol') symbol: string, @Body() updateSymbolDto: UpdateSymbolDto) {
+  update(
+    @Param('symbol') symbol: string,
+    @Body() updateSymbolDto: UpdateSymbolDto,
+  ) {
     return this.symbolsService.update(symbol, updateSymbolDto);
   }
 }

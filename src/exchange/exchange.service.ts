@@ -1,5 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
+  ExchangeInfo,
   KlinesParams,
   MainClient,
   NewSpotOrderParams,
@@ -28,20 +29,17 @@ export class ExchangeService {
       api_key: settings.accessKey,
       api_secret: settings.secretKey,
       baseUrl: settings.apiUrl,
-      recvWindow: 6000
+      recvWindow: 6000,
     });
     return client;
   }
 
   async exchangeInfo(settings: Setting) {
-    return this.client(settings)
-      .getExchangeInfo()
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
-      });
+    const result: ExchangeInfo = await this.client(settings).getExchangeInfo();
+    if(!result) {
+      // this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);      
+    }
+    return result;
   }
 
   async orderBuy(
@@ -54,10 +52,12 @@ export class ExchangeService {
     const params: NewSpotOrderParams = {
       symbol,
       side: 'BUY',
-      type: toOrderType(options.type)
+      type: toOrderType(options.type),
     };
 
-    quantity ? params.quantity = parseFloat(quantity) : params.quoteOrderQty = parseFloat(options.quoteOrderQty);
+    quantity
+      ? (params.quantity = parseFloat(quantity))
+      : (params.quoteOrderQty = parseFloat(options.quoteOrderQty));
 
     return await this.client(settings).submitNewOrder(params); // testNewOrder(params);
   }
@@ -72,10 +72,12 @@ export class ExchangeService {
     const params: NewSpotOrderParams = {
       symbol,
       side: 'SELL',
-      type: toOrderType(options.type)
+      type: toOrderType(options.type),
     };
 
-    quantity ? params.quantity = parseFloat(quantity) : params.quoteOrderQty = parseFloat(options.quoteOrderQty);
+    quantity
+      ? (params.quantity = parseFloat(quantity))
+      : (params.quoteOrderQty = parseFloat(options.quoteOrderQty));
 
     return await this.client(settings).submitNewOrder(params); // submitNewOrder(params);
   }

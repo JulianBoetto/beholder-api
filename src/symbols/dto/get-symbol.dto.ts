@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from "class-validator";
+import { IsNumber, IsOptional, IsString } from "class-validator";
 
 export class GetSymbolDto {
     @IsOptional()
@@ -10,8 +10,8 @@ export class GetSymbolDto {
     quote?: string;
 
     @IsOptional()
-    @IsString()
-    page?: string;
+    @IsNumber()
+    page?: number;
 
     @IsOptional()
     @IsString()

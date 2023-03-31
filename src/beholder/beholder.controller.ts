@@ -2,7 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { BeholderService } from './beholder.service';
 import { CreateBeholderDto } from './dto/create-beholder.dto';
 import { UpdateBeholderDto } from './dto/update-beholder.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Beholder')
 @Controller('beholder')
 export class BeholderController {
   constructor(private readonly beholderService: BeholderService) { }

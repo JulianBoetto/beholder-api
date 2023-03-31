@@ -1,7 +1,9 @@
 import { Controller, Get, HttpCode, HttpStatus, Param, Request } from '@nestjs/common';
 import { AuthRequest } from '../auth/models/AuthRequest';
 import { ExchangeService } from './exchange.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Exchange')
 @Controller('exchange')
 export class ExchangeController {
     constructor(private readonly exchangeService: ExchangeService) { }

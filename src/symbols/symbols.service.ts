@@ -38,9 +38,6 @@ export class SymbolsService {
       )
     else return await this.getAllSymbols();
   }
-  create(createSymbolDto: CreateSymbolDto) {
-    return 'This action syncs all symbols';
-  }
 
   async update(symbol: string, updateSymbol: UpdateSymbolDto) {
     let symbolBase = await this.prisma.symbol.findUnique({ where: { symbol } });

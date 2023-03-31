@@ -21,4 +21,8 @@ describe('AppController (e2e)', () => {
       .expect(200)
       .expect('{"name":"Beholder-API","version":"1.0","date":2023,"author":"Julián Boetto"}');
   });
+
+  afterAll(async () => {
+    await app.close();
+  });
 });

@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { SymbolsModule } from '../src/symbols/symbols.module';
 
 describe('Symbol service', () => {
   let app: INestApplication;
@@ -9,7 +10,7 @@ describe('Symbol service', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppModule, SymbolsModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -245,5 +246,9 @@ describe('Symbol service', () => {
       expect(symbol.minLotSize).toMatch(/^\d+\.\d+$/);
       expect(typeof symbol.isFavorite).toBe('boolean');
     });
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 });

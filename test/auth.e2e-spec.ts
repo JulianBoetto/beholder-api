@@ -115,4 +115,8 @@ describe('Auth service', () => {
       expect(text).toEqual('{"statusCode":401,"message":"Unauthorized"}');
     });
   });
+
+  afterAll(async () => {
+    await app.close();
+  });
 });

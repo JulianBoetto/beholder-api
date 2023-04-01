@@ -613,4 +613,33 @@ export class MonitorsService {
       }
     }, 3000);
   }
+
+  // Routes
+  async getMonitors(): Promise<Monitor[]> {
+    return
+  }
+
+  async getMonitor(id: string): Promise<Monitor> {
+    return
+  }
+
+  async insertMonitor(monitorDto: Monitor): Promise<void> {
+    return
+  }
+
+  async updateMonitor(id: string, monitorDto: Monitor): Promise<void> {
+    return
+  }
+
+  async deleteMonitor(id: string): Promise<void> {
+    return
+  }
+
+  async startMonitor(id: string): Promise<void> {
+    // Inicie o monitor com o ID fornecido
+  }
+
+  async stopMonitor(id: string): Promise<void> {
+    // Pare o monitor com o ID fornecido
+  }
 }

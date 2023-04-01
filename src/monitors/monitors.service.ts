@@ -138,10 +138,8 @@ export class MonitorsService {
           this.logger.info(`Monitor ${monitorId}: ${JSON.stringify(ticker)}`);
 
         try {
-          const currentMemory = this.beholderService.getMemory(
-            symbol,
-            indexKeys.TICKER,
-          );
+          const currentMemory: { current: number } =
+            await this.beholderService.getMemory(symbol, indexKeys.TICKER);
 
           const newMemory = { previous: {}, current: {} };
           newMemory.previous = currentMemory ? currentMemory.current : ticker;
@@ -510,10 +508,8 @@ export class MonitorsService {
               bestBid: mkt.bestBid,
             };
 
-            const currentMemory = this.beholderService.getMemory(
-              book.symbol,
-              indexKeys.BOOK,
-            );
+            const currentMemory: { current: number } =
+              await this.beholderService.getMemory(book.symbol, indexKeys.BOOK);
 
             const newMemory = { previous: {}, current: {} };
             newMemory.previous = currentMemory ? currentMemory.current : book;

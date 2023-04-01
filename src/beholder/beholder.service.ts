@@ -171,28 +171,6 @@ export class BeholderService {
     return `${symbol}:${indexKey}`;
   }
 
-  async updateMemory(
-    symbol: string,
-    index: string,
-    interval: string,
-    value: number | object,
-    executeAutomations = true,
-  ) {
-    if (this.LOCK_MEMORY) return [];
-
-    const memoryKey = this.parseMemoryKey(symbol, index, interval);
-    this.MEMORY[memoryKey] = value;
-
-    if (this.LOGS)
-      this.logger.info(
-        `Beholder memory updated: ${memoryKey} => ${JSON.stringify(value)}`,
-      );
-
-    if (!executeAutomations) return [];
-
-    return this.testAutomations(memoryKey);
-  }
-
   private isLocked(automationId: string | any) {
     if (Array.isArray(automationId))
       return automationId.some((id) => this.LOCK_BRAIN[id] === true);
@@ -263,17 +241,6 @@ export class BeholderService {
 
     if (!ids) return [];
     return [...new Set(ids)].map((id) => this.BRAIN[id]);
-  }
-
-  getMemory(symbol: string, index: string, interval?: string) {
-    if (symbol && index) {
-      const indexKey = interval ? `${index}_${interval}` : index;
-      const memoryKey = `${symbol}:${indexKey}`;
-
-      const result = this.MEMORY[memoryKey];
-      return typeof result === 'object' ? { ...result } : result;
-    }
-    return { ...this.MEMORY };
   }
 
   private async evalDecision(memoryKey: string, automation: Automation) {
@@ -420,5 +387,56 @@ export class BeholderService {
         text: `Error at ${automation.name}: ${err.message}`,
       };
     }
+  }
+
+  // Routes
+  async getMemory(symbol: string, index: string, interval?: string) {
+    if (symbol && index) {
+      const indexKey = interval ? `${index}_${interval}` : index;
+      const memoryKey = `${symbol}:${indexKey}`;
+
+      const result = this.MEMORY[memoryKey];
+      return typeof result === 'object' ? { ...result } : result;
+    }
+    return { ...this.MEMORY };
+  }
+
+  async updateMemory(
+    symbol: string,
+    index: string,
+    interval: string,
+    value: number | object,
+    executeAutomations = true,
+  ) {
+    if (this.LOCK_MEMORY) return [];
+
+    const memoryKey = this.parseMemoryKey(symbol, index, interval);
+    this.MEMORY[memoryKey] = value;
+
+    if (this.LOGS)
+      this.logger.info(
+        `Beholder memory updated: ${memoryKey} => ${JSON.stringify(value)}`,
+      );
+
+    if (!executeAutomations) return [];
+
+    return this.testAutomations(memoryKey);
+  }
+  
+
+  getBrainIndexes() {
+    // 
+  }
+
+  getBrain() {
+    // 
+  }
+
+  getAnalysisIndex() {
+    // 
+  }
+
+  getAgenda() {
+    // 
   }
 }

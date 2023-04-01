@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { PrismaModule } from '../prisma/prisma.module';
-import { OrdersTemplateModule } from '../orders-template/orders-template.module';
+import { OrdersTemplateModule } from '../order-templates/order-templates.module';
 import { SymbolsModule } from '../symbols/symbols.module';
 import { ExchangeModule } from '../exchange/exchange.module';
 

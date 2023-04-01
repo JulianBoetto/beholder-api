@@ -22,7 +22,7 @@ import { EmailModule } from './email/email.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { SmsService } from './sms/sms.service';
 import { SmsModule } from './sms/sms.module';
-import { OrdersTemplateModule } from './orders-template/orders-template.module';
+import { OrderTemplatesModule } from './order-templates/order-templates.module';
 
 @Module({
   imports: [
@@ -41,7 +41,7 @@ import { OrdersTemplateModule } from './orders-template/orders-template.module';
     EmailModule,
     SmsModule,
     TelegramModule,
-    OrdersTemplateModule,
+    OrderTemplatesModule,
   ],
   controllers: [AppController],
   providers: [

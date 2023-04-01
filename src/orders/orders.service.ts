@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Action } from '../action/entities/action.entity';
 import { Automation } from '../automations/entities/automation.entity';
 import { ExchangeService } from '../exchange/exchange.service';
-import { OrderTemplate } from '../orders-template/entities/orderTemplate';
-import { OrdersTemplateService } from '../orders-template/orders-template.service';
+import { OrderTemplate } from '../order-templates/entities/orderTemplate';
+import { OrderTemplatesService } from '../order-templates/order-templates.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { Symbol } from '../symbols/entities/symbol.entity';
 import { SymbolsService } from '../symbols/symbols.service';
@@ -23,7 +23,7 @@ export class OrdersService {
   constructor(
     @Inject('winston') private logger: Logger,
     private readonly prisma: PrismaService,
-    private ordersTemplateService: OrdersTemplateService,
+    private orderTemplatesService: OrderTemplatesService,
     private symbolsService: SymbolsService,
     private exchangeService: ExchangeService,
   ) {}
@@ -198,7 +198,7 @@ export class OrdersService {
 
     const orderTemplate: OrderTemplate = action.orderTemplate
       ? { ...action.orderTemplate }
-      : await this.ordersTemplateService.getOrderTemplate(
+      : await this.orderTemplatesService.getOrderTemplate(
           action.orderTemplateId,
         );
 

@@ -1,4 +1,4 @@
-import { OrderTemplate } from '../../orders-template/entities/orderTemplate';
+import { OrderTemplate } from '../../order-templates/entities/orderTemplate';
 
 export class Action {
   id: number;

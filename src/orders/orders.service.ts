@@ -38,17 +38,6 @@ export class OrdersService {
     return this.updateOrder(order, newOrder);
   }
 
-  async getOrder(orderId: number, clientOrderId: number) {
-    const order = await this.prisma.order.findMany({
-      where: { orderId },
-      // where: { orderId, clientOrderId },
-      include: {
-        automation: true,
-      },
-    });
-    return order;
-  }
-
   async updateOrder(currentOrder: Order, newOrder: any) {
     if (!currentOrder || !newOrder) return false;
 
@@ -117,6 +106,74 @@ export class OrdersService {
     let ids: number[] = idObjects.map((o) => o._max.id);
 
     return this.prisma.order.findMany({ where: { id: { in: ids } } });
+  }
+
+
+  private async calcQuoteQty(orderTemplate: OrderTemplate, symbol: Symbol) {
+    if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity)) {
+      this.logger.info(
+        `Order Template ${orderTemplate} by ${symbol}: Only MARKET orders can calc quote qty.`,
+      );
+      return;
+    }
+
+    const multiplier = parseFloat(orderTemplate.quantityMultiplier);
+
+    if (orderTemplate.quantity === 'MAX_WALLET') {
+      //     if (orderTemplate.side !== "BUY") throw new Error(`Only MARKET BUY orders can calc quote qty with MAX_WALLET`);
+      //     const asset = MEMORY[`${symbol.quote}:WALLET`];
+      //     if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
+      //     return (parseFloat(asset) * (multiplier > 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
+    } else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
+      const multiplierValue = multiplier < 1 ? 1 : multiplier;
+      const quoteQty = parseFloat(symbol.minNotional) * multiplierValue;
+      return quoteQty.toFixed(symbol.quotePrecision);
+    }
+
+    this.logger.info(
+      `Invalid order template quantity ${orderTemplate.quantity}`,
+    );
+    return;
+  }
+
+  private calcPrice(
+    orderTemplate: OrderTemplate,
+    symbol: Symbol,
+    tipo: boolean,
+  ) {
+    return;
+  }
+
+  // Routes
+  getLastOrders() {
+    // return the last orders
+  }
+
+  getOrdersReport(quote: string) {
+    // return the orders report for the given quote
+  }
+
+  async getOrder(orderId: number, clientOrderId: number) {
+    const order = await this.prisma.order.findMany({
+      where: { orderId },
+      // where: { orderId, clientOrderId },
+      include: {
+        automation: true,
+      },
+    });
+    return order;
+  }
+
+  getOrders(symbol?: string) {
+    // return the orders for the given symbol (if provided), or all orders otherwise
+  }
+
+  syncOrder(id: string) {
+    // sync the order with the given id
+  }
+
+  newOrder(id: number, order: Order) {
+    
   }
 
   async placeOrder(settings: User, automation: Automation, action: Action) {
@@ -260,38 +317,7 @@ export class OrdersService {
     };
   }
 
-  private async calcQuoteQty(orderTemplate: OrderTemplate, symbol: Symbol) {
-    if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity)) {
-      this.logger.info(
-        `Order Template ${orderTemplate} by ${symbol}: Only MARKET orders can calc quote qty.`,
-      );
-      return;
-    }
-
-    const multiplier = parseFloat(orderTemplate.quantityMultiplier);
-
-    if (orderTemplate.quantity === 'MAX_WALLET') {
-      //     if (orderTemplate.side !== "BUY") throw new Error(`Only MARKET BUY orders can calc quote qty with MAX_WALLET`);
-      //     const asset = MEMORY[`${symbol.quote}:WALLET`];
-      //     if (!asset) throw new Error(`There is no ${symbol.quote} in your wallet to place a buy.`);
-      //     return (parseFloat(asset) * (multiplier > 1 ? 1 : multiplier)).toFixed(symbol.quotePrecision);
-    } else if (orderTemplate.quantity === 'MIN_NOTIONAL') {
-      const multiplierValue = multiplier < 1 ? 1 : multiplier;
-      const quoteQty = parseFloat(symbol.minNotional) * multiplierValue;
-      return quoteQty.toFixed(symbol.quotePrecision);
-    }
-
-    this.logger.info(
-      `Invalid order template quantity ${orderTemplate.quantity}`,
-    );
-    return;
-  }
-
-  private calcPrice(
-    orderTemplate: OrderTemplate,
-    symbol: Symbol,
-    tipo: boolean,
-  ) {
-    return;
+  cancelOrder(symbol: string, orderId: string) {
+    // cancel the order with the given symbol and orderId
   }
 }

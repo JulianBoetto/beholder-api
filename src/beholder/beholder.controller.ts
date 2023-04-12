@@ -15,8 +15,8 @@ import { BeholderService } from './beholder.service';
 export class BeholderController {
   constructor(private readonly beholderService: BeholderService) {}
 
-  @ApiOperation({ summary: 'Obtener los índices de memoria disponibles' })
   @Get('/memory/indexes')
+  @ApiOperation({ summary: 'Get the available memory indexes.' })
   @ApiResponse({
     status: 200,
     description: 'Los índices de memoria disponibles',
@@ -25,28 +25,27 @@ export class BeholderController {
   getMemoryIndexes() {
     return this.beholderService.getMemoryIndexes();
   }
+
   @ApiOperation({
-    summary:
-      'Obtener la memoria de un símbolo en un índice y un intervalo específico',
+    summary: 'Get the memory of a symbol in a specific index and interval',
   })
   @ApiQuery({
     name: 'symbol',
     required: false,
-    description: 'El símbolo de la memoria a obtener',
+    description: 'The symbol of the memory to retrieve.',
   })
   @ApiQuery({
     name: 'index',
     required: false,
-    description: 'El índice de la memoria a obtener',
+    description: 'The index of the memory to retrieve.',
   })
   @ApiQuery({
     name: 'interval',
     required: false,
-    description: 'El intervalo de la memoria a obtener',
+    description: 'The interval of the memory to retrieve.',
   })
   @ApiOkResponse({
-    description:
-      'La memoria del símbolo en el índice y el intervalo específicos',
+    description: 'The memory of the symbol in the specific index and interval.',
     type: Object,
   })
   getMemory(
@@ -57,19 +56,19 @@ export class BeholderController {
     return this.beholderService.getMemory(symbol, index, interval);
   }
 
-  @ApiOperation({ summary: 'Obtener los índices de brain disponibles' })
   @Get('/brain/indexes')
+  @ApiOperation({ summary: 'Get the available brain indexes.' })
   @ApiResponse({
     status: 200,
-    description: 'Los índices de brain disponibles',
+    description: 'The available brain indexes',
     type: [String],
   })
   getBrainIndexes() {
     return this.beholderService.getBrainIndexes();
   }
 
-  @ApiOperation({ summary: 'Obtener el contenido completo de brain' })
   @Get('/brain')
+  @ApiOperation({ summary: 'Get the complete content of brain.' })
   @ApiResponse({
     status: 200,
     description: 'El contenido completo de brain',
@@ -79,8 +78,8 @@ export class BeholderController {
     return this.beholderService.getBrain();
   }
 
-  @ApiOperation({ summary: 'Obtener el índice de análisis' })
   @Get('/analysis')
+  @ApiOperation({ summary: 'Get the analysis index.' })
   @ApiResponse({
     status: 200,
     description: 'El índice de análisis',

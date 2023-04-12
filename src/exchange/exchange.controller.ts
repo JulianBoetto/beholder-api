@@ -17,16 +17,17 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@ne
 export class ExchangeController {
   constructor(private readonly exchangeService: ExchangeService) {}
 
-  @ApiOperation({ summary: 'Obtener balance completo' })
-  @ApiParam({ name: 'fiat', description: 'Moneda fiat', required: true })
-  @ApiResponse({ status: 200, description: 'Balance completo', type: Object })
+  @ApiOperation({ summary: 'Get a complete balance by fiat currency' })
+  @ApiParam({ name: 'fiat', description: 'Fiat currency', required: true })
+  @ApiResponse({ status: 200, description: 'Complete balance.', type: Object })
   @Get('balance/full/:fiat')
   findFullBalance(@Param('fiat') fiat: string, @Request() req: AuthRequest) {
     const userId: number = req.user['userId'];
     return this.exchangeService.getFullBalance(fiat, userId);
   }
-  @ApiOperation({ summary: 'Obtener balance' })
-  @ApiParam({ name: 'fiat', description: 'Moneda fiat', required: true })
+
+  @ApiOperation({ summary: 'Get balance by fiat currency.' })
+  @ApiParam({ name: 'fiat', description: 'Fiat currency', required: true })
   @ApiResponse({ status: 200, description: 'Balance', type: Object })
   @Get('balance/:fiat')
   findBalance(@Param('fiat') fiat: string, @Request() req: AuthRequest) {
@@ -34,8 +35,8 @@ export class ExchangeController {
     return this.exchangeService.getBalance(fiat, userId);
   }
 
-  @ApiOperation({ summary: 'Obtener lista de monedas' })
-  @ApiResponse({ status: 200, description: 'Lista de monedas', type: [String] })
+  @ApiOperation({ summary: 'Get list of coins.' })
+  @ApiResponse({ status: 200, description: 'List of coins', type: [String] })
   @Get('coins')
   getCoins(@Request() req: AuthRequest): any {
     const userId: number = req.user['userId'];

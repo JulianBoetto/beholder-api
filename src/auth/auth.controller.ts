@@ -7,7 +7,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { IsPublic } from './decorators/is-public.decorator';
 import { LoginDto, LoginRtaDto } from './dto/login.dto';
@@ -21,6 +21,7 @@ import { AuthRequest } from './models/AuthRequest';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiOperation({ summary: 'Login and generate a new access token, refresh token and push token.' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({
     status: 200,
@@ -39,6 +40,7 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
+  @ApiOperation({ summary: 'Invalidate current access token.' })
   @ApiResponse({
     status: 200,
     description: 'Success',
@@ -54,6 +56,7 @@ export class AuthController {
     return this.authService.logout(userId);
   }
 
+  @ApiOperation({ summary: 'Generate a new tokens.' })
   @ApiResponse({
     status: 200,
     description: 'Success',

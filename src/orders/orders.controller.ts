@@ -9,9 +9,15 @@ import {
   Request,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthRequest } from 'src/auth/models/AuthRequest';
 
+@ApiBearerAuth('token')
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
@@ -44,7 +50,10 @@ export class OrdersController {
     @Param('orderId') orderId: string,
     @Param('clientOrderId') clientOrderId: string,
   ) {
-    return this.ordersService.getOrder(parseInt(orderId), parseInt(clientOrderId));
+    return this.ordersService.getOrder(
+      parseInt(orderId),
+      parseInt(clientOrderId),
+    );
   }
 
   @ApiOperation({ summary: 'Get orders' })

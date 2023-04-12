@@ -14,8 +14,9 @@ import { AuthRequest } from '../auth/models/AuthRequest';
 import { GetSymbolDto } from './dto/get-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
 import { SymbolsService } from './symbols.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth('token')
 @ApiTags('Symbols')
 @Controller('symbols')
 export class SymbolsController {

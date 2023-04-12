@@ -20,10 +20,21 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .addBearerAuth()
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'token',
+    )
     .setTitle('Beholder TS bot')
     .setDescription('The multi-coin bot documentation')
     .setVersion('1.0')
+    .addServer(
+      `http://localhost:${process.env.PORT}`,
+      'Development server',
+    )
+    .addServer(
+      `https://beholder.julianboetto.lat`,
+      'Production server',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);

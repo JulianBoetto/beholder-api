@@ -9,8 +9,9 @@ import {
 } from '@nestjs/common';
 import { AuthRequest } from '../auth/models/AuthRequest';
 import { ExchangeService } from './exchange.service';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth('token')
 @ApiTags('Exchange')
 @Controller('exchange')
 export class ExchangeController {

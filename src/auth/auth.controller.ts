@@ -15,6 +15,7 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenGuard } from './guards/refreshToken.guard';
 import { AuthRequest } from './models/AuthRequest';
 
+@ApiBearerAuth('token')
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
@@ -38,7 +39,6 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
-  @ApiBearerAuth()
   @ApiResponse({
     status: 200,
     description: 'Success',

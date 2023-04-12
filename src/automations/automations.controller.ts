@@ -5,13 +5,14 @@ import {
   Get,
   Param,
   Patch,
-  Post
+  Post,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AutomationsService } from './automations.service';
 import { CreateAutomationDto } from './dto/create-automation.dto';
 import { UpdateAutomationDto } from './dto/update-automation.dto';
 
+@ApiBearerAuth('token')
 @ApiTags('Automations')
 @Controller('automations')
 export class AutomationsController {
@@ -43,7 +44,10 @@ export class AutomationsController {
   }
 
   @Patch(':id')
-  updateAutomation(@Param('id') id: string, @Body() updatesBody: UpdateAutomationDto) {
+  updateAutomation(
+    @Param('id') id: string,
+    @Body() updatesBody: UpdateAutomationDto,
+  ) {
     return this.automationsService.updateAutomation(id, updatesBody);
   }
 

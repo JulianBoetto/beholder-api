@@ -7,10 +7,11 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MonitorsService } from './monitors.service';
 import { Monitor } from './entities/monitor.entity';
 
+@ApiBearerAuth('token')
 @ApiTags('Monitors')
 @Controller('monitors')
 export class MonitorsController {

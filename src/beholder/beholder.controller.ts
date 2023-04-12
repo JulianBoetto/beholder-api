@@ -1,24 +1,15 @@
+import { Controller, Get, Query } from '@nestjs/common';
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-} from '@nestjs/common';
-import { BeholderService } from './beholder.service';
-import { CreateBeholderDto } from './dto/create-beholder.dto';
-import { UpdateBeholderDto } from './dto/update-beholder.dto';
-import {
+  ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { BeholderService } from './beholder.service';
 
+@ApiBearerAuth('token')
 @ApiTags('Beholder')
 @Controller('beholder')
 export class BeholderController {

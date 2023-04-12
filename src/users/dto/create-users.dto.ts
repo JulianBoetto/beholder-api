@@ -1,64 +1,81 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { User } from '../entities/user.entity';
 import {
-    IsDate,
-    IsEmail,
-    IsString,
-    Matches,
-    MaxLength,
-    MinLength,
+  IsDate,
+  IsEmail,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 
 export class CreateUsersDto extends User {
-    @IsEmail()
-    email: string;
+  @ApiProperty({ example: 'user@example.com' })
+  @IsEmail()
+  email: string;
 
-    @IsString()
-    @MinLength(4)
-    @MaxLength(20)
-    @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-        message: 'password too weak',
-    })
-    password: string;
+  @ApiProperty({ minLength: 4, maxLength: 20, example: 'Passw0rd!' })
+  @IsString()
+  @MinLength(4)
+  @MaxLength(20)
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'password too weak',
+  })
+  password: string;
 
-    @IsString()
-    apiUrl?: string;
+  @ApiPropertyOptional({ example: 'https://api.example.com' })
+  @IsString()
+  apiUrl?: string;
 
-    @IsString()
-    accessKey?: string;
+  @ApiPropertyOptional({ example: 'ACCESS_KEY' })
+  @IsString()
+  accessKey?: string;
 
-    @IsString()
-    secretKey?: string;
+  @ApiPropertyOptional({ example: 'SECRET_KEY' })
+  @IsString()
+  secretKey?: string;
 
-    @IsString()
-    streamUrl?: string;
+  @ApiPropertyOptional({ example: 'https://stream.example.com' })
+  @IsString()
+  streamUrl?: string;
 
-    @IsString()
-    phone?: string;
+  @ApiPropertyOptional({ example: '+1234567890' })
+  @IsString()
+  phone?: string;
 
-    @IsString()
-    sendGridKey?: string;
+  @ApiPropertyOptional({ example: 'SENDGRID_API_KEY' })
+  @IsString()
+  sendGridKey?: string;
 
-    @IsString()
-    twilioSid?: string;
+  @ApiPropertyOptional({ example: 'TWILIO_SID' })
+  @IsString()
+  twilioSid?: string;
 
-    @IsString()
-    twilioToken?: string;
+  @ApiPropertyOptional({ example: 'TWILIO_TOKEN' })
+  @IsString()
+  twilioToken?: string;
 
-    @IsString()
-    twilioPhone?: string;
+  @ApiPropertyOptional({ example: '+1234567890' })
+  @IsString()
+  twilioPhone?: string;
 
-    @IsString()
-    telegramBot?: string;
+  @ApiPropertyOptional({ example: 'TELEGRAM_BOT_TOKEN' })
+  @IsString()
+  telegramBot?: string;
 
-    @IsString()
-    telegramChat?: string;
+  @ApiPropertyOptional({ example: 'TELEGRAM_CHAT_ID' })
+  @IsString()
+  telegramChat?: string;
 
-    @IsString()
-    pushToken?: string;
+  @ApiPropertyOptional({ example: 'PUSH_TOKEN' })
+  @IsString()
+  pushToken?: string;
 
-    @IsDate()
-    createdAt?: Date;
+  @ApiPropertyOptional({ example: '2023-04-01T15:30:00.000Z' })
+  @IsDate()
+  createdAt?: Date;
 
-    @IsDate()
-    updatedAt?: Date;
+  @ApiPropertyOptional({ example: '2023-04-01T15:30:00.000Z' })
+  @IsDate()
+  updatedAt?: Date;
 }

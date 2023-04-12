@@ -1,44 +1,61 @@
-import { IsBoolean, IsDate, IsNumber, IsOptional, IsString } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsDate,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateSymbolDto {
-    @IsString()
-    symbol: string;
+  @ApiProperty({ type: String })
+  @IsString()
+  symbol: string;
 
-    @IsNumber()
-    basePrecision: number;
+  @ApiProperty({ type: Number })
+  @IsNumber()
+  basePrecision: number;
 
-    @IsString()
-    base: string;
+  @ApiProperty({ type: String })
+  @IsString()
+  base: string;
 
-    @IsString()
-    quote: string;
+  @ApiProperty({ type: String })
+  @IsString()
+  quote: string;
 
-    @IsString()
-    stepSize: string;
-    
-    @IsString()
-    tickSize: string;
+  @ApiProperty({ type: String })
+  @IsString()
+  stepSize: string;
 
-    @IsNumber()
-    quotePrecision: number;
+  @ApiProperty({ type: String })
+  @IsString()
+  tickSize: string;
 
-    @IsString()
-    minNotional: string;
+  @ApiProperty({ type: Number })
+  @IsNumber()
+  quotePrecision: number;
 
-    @IsString()
-    minLotSize: string;
+  @ApiProperty({ type: String })
+  @IsString()
+  minNotional: string;
 
-    @IsOptional()
-    @IsBoolean()
-    isFavorite?: boolean;
+  @ApiProperty({ type: String })
+  @IsString()
+  minLotSize: string;
 
-    @IsOptional()
-    @IsDate()
-    createdAt?: Date;
+  @ApiPropertyOptional({ type: Boolean })
+  @IsOptional()
+  @IsBoolean()
+  isFavorite?: boolean;
 
-    @IsOptional()
-    @IsDate()
-    updatedAt?: Date;
+  @ApiPropertyOptional({ type: Date })
+  @IsOptional()
+  @IsDate()
+  createdAt?: Date;
 
-    length: CreateSymbolDto;
+  @ApiPropertyOptional({ type: Date })
+  @IsOptional()
+  @IsDate()
+  updatedAt?: Date;
 }

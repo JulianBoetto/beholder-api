@@ -20,6 +20,7 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
+    .addBearerAuth()
     .setTitle('Beholder TS bot')
     .setDescription('The multi-coin bot documentation')
     .setVersion('1.0')

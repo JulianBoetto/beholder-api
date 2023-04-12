@@ -1,19 +1,24 @@
-import { IsNumber, IsOptional, IsString } from "class-validator";
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class GetSymbolDto {
-    @IsOptional()
-    @IsString()
-    base?: string;
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional()
+  base?: string;
 
-    @IsOptional()
-    @IsString()
-    quote?: string;
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional()
+  quote?: string;
 
-    @IsOptional()
-    @IsNumber()
-    page?: number;
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional()
+  page?: number;
 
-    @IsOptional()
-    @IsString()
-    onlyFavorites?: string
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional()
+  onlyFavorites?: string;
 }

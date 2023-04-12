@@ -135,7 +135,7 @@ export class SymbolsService {
         const minNotionalFilter: SymbolMinNotionalFilter | any =
           item.filters.find(
             (filter: { filterType: string }) =>
-              filter.filterType === 'MIN_NOTIONAL',
+              filter.filterType === 'NOTIONAL',
           );
         const lotSizeFilter: SymbolLotSizeFilter | any = item.filters.find(
           (filter: { filterType: string }) => filter.filterType === 'LOT_SIZE',

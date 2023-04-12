@@ -54,6 +54,15 @@ export class AuthController {
     return this.authService.logout(userId);
   }
 
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: LoginRtaDto
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized'
+  })
   @IsPublic()
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')

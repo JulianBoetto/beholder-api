@@ -11,6 +11,7 @@ import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import actionsTypes from '../utils/types/actionsTypes';
 import { Logger } from 'winston';
+import { MemoryService } from '../memory/memory.service';
 
 @Injectable()
 export class BeholderService {
@@ -21,14 +22,14 @@ export class BeholderService {
     private telegramService: TelegramService,
     private ordersService: OrdersService,
     private settingsService: SettingsService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private memoryService: MemoryService
   ) {}
 
-  private MEMORY: object = {};
   private BRAIN: object;
   private BRAIN_INDEX: any = [];
-  private LOCK_MEMORY: boolean = false;
   private LOCK_BRAIN: object = {};
+  private LOCK_MEMORY: boolean = false;
   private LOGS: boolean = process.env.BEHOLDER_LOGS === 'true';
   private INTERVAL: number = parseInt(process.env.AUTOMATION_INTERVAL) || 0;
 
@@ -118,7 +119,7 @@ export class BeholderService {
   }
 
   getMemoryIndexes() {
-    return Object.entries(this.flattenObject(this.MEMORY))
+    return Object.entries(this.flattenObject(this.memoryService.MEMORY))
       .map((prop) => {
         if (prop[0].indexOf('previous') !== -1) return false;
         const propSplit = prop[0].split(':');
@@ -251,7 +252,7 @@ export class BeholderService {
 
       if (indexes.length) {
         const isChecked = indexes.every(
-          (ix) => this.MEMORY[ix] !== null && this.MEMORY[ix] !== undefined,
+          (ix) => this.memoryService.MEMORY[ix] !== null && this.memoryService.MEMORY[ix] !== undefined,
         );
         if (!isChecked) return false;
 
@@ -269,7 +270,7 @@ export class BeholderService {
 
         // Compara la condición con los datos de la memoria del Beholder
         const isValid = evalCondition
-          ? eval(evalCondition.replace(/MEMORY/g, 'this.MEMORY'))
+          ? eval(evalCondition.replace(/MEMORY/g, 'this.memoryService.MEMORY'))
           : true;
 
         // Solo si la condición es válida continua
@@ -390,16 +391,7 @@ export class BeholderService {
   }
 
   // Routes
-  async getMemory(symbol: string, index: string, interval?: string) {
-    if (symbol && index) {
-      const indexKey = interval ? `${index}_${interval}` : index;
-      const memoryKey = `${symbol}:${indexKey}`;
-
-      const result = this.MEMORY[memoryKey];
-      return typeof result === 'object' ? { ...result } : result;
-    }
-    return { ...this.MEMORY };
-  }
+  
 
   async updateMemory(
     symbol: string,
@@ -411,7 +403,7 @@ export class BeholderService {
     if (this.LOCK_MEMORY) return [];
 
     const memoryKey = this.parseMemoryKey(symbol, index, interval);
-    this.MEMORY[memoryKey] = value;
+    this.memoryService.MEMORY[memoryKey] = value;
 
     if (this.LOGS)
       this.logger.info(

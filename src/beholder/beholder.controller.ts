@@ -8,12 +8,16 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { BeholderService } from './beholder.service';
+import { MemoryService } from 'src/memory/memory.service';
 
 @ApiBearerAuth('token')
 @ApiTags('Beholder')
 @Controller('beholder')
 export class BeholderController {
-  constructor(private readonly beholderService: BeholderService) {}
+  constructor(
+    private readonly beholderService: BeholderService,
+    private readonly memoryService: MemoryService,
+  ) {}
 
   @Get('/memory/indexes')
   @ApiOperation({ summary: 'Get the available memory indexes.' })
@@ -53,7 +57,7 @@ export class BeholderController {
     @Query('index') index: string,
     @Query('interval') interval: string,
   ) {
-    return this.beholderService.getMemory(symbol, index, interval);
+    return this.memoryService.getMemory(symbol, index, interval);
   }
 
   @Get('/brain/indexes')

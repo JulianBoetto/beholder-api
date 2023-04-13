@@ -1,15 +1,12 @@
 import {
   Controller,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
-  Post,
-  Request,
+  Request
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthRequest } from '../auth/models/AuthRequest';
 import { ExchangeService } from './exchange.service';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth('token')
 @ApiTags('Exchange')

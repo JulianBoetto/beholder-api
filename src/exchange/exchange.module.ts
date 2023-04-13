@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { ExchangeService } from './exchange.service';
-import { ExchangeController } from './exchange.controller';
-import { UsersModule } from '../users/users.module';
 import { SettingsModule } from '../settings/settings.module';
+import { ExchangeController } from './exchange.controller';
+import { ExchangeService } from './exchange.service';
+import { ConverterModule } from '../converter/converter.module';
 
 @Module({
-  imports: [UsersModule, SettingsModule],
+  imports: [SettingsModule, ConverterModule],
   providers: [ExchangeService],
   exports: [ExchangeService],
-  controllers: [ExchangeController]
+  controllers: [ExchangeController],
 })
-export class ExchangeModule { }
+export class ExchangeModule {}

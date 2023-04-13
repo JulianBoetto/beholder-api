@@ -23,6 +23,7 @@ import { TelegramModule } from './telegram/telegram.module';
 import { SmsService } from './sms/sms.service';
 import { SmsModule } from './sms/sms.module';
 import { OrderTemplatesModule } from './order-templates/order-templates.module';
+import { MemoryModule } from './memory/memory.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { OrderTemplatesModule } from './order-templates/order-templates.module';
     SmsModule,
     TelegramModule,
     OrderTemplatesModule,
+    MemoryModule
   ],
   controllers: [AppController],
   providers: [
@@ -52,10 +54,10 @@ import { OrderTemplatesModule } from './order-templates/order-templates.module';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: AccessTokenGuard
+      useClass: AccessTokenGuard,
     },
     WsAdapter,
-    SmsService
+    SmsService,
   ],
 })
-export class AppModule { }
+export class AppModule {}

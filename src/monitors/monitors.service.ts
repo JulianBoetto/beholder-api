@@ -1,8 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AccountInformation, Kline, WsMessageKlineFormatted } from 'binance';
+import { Logger } from 'winston';
 import { BeholderService } from '../beholder/beholder.service';
 import { ExchangeService } from '../exchange/exchange.service';
 import { IndicatorsService } from '../indicators/indicators.service';
+import { Order } from '../orders/entities/order.entity';
 import { OrdersService } from '../orders/orders.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { Setting } from '../settings/entities/setting.entity';
@@ -12,21 +14,17 @@ import { indexKeys } from '../utils/indexes';
 import { monitorTypes } from '../utils/monitorTypes';
 import { orderStatus } from '../utils/orderTypes';
 import {
-  FormatedKline,
-  strToNumber,
-  toFormatWsKline,
-  wsToFormatKline,
+  strToNumber
 } from '../utils/types/formatedKlines';
-import { toKlineInterval } from '../utils/types/klineIntervalTypes';
-import { Logger } from 'winston';
-import { Monitor } from './entities/monitor.entity';
 import {
   MiniTicker,
   WsMessage24hrTickerFormatted,
   formatedOrder,
 } from '../utils/types/formatedTicker';
-import { Order } from '../orders/entities/order.entity';
+import { toKlineInterval } from '../utils/types/klineIntervalTypes';
 import { FormatedOrder, getLightLastOrder } from '../utils/types/orderTypes';
+import { Monitor } from './entities/monitor.entity';
+import { MemoryService } from '../memory/memory.service';
 
 @Injectable()
 export class MonitorsService {
@@ -38,6 +36,7 @@ export class MonitorsService {
     private readonly beholderService: BeholderService,
     private readonly ordersService: OrdersService,
     private readonly indicatorsService: IndicatorsService,
+    private readonly memoryService: MemoryService
   ) {}
 
   @Inject('winston') private logger: Logger;
@@ -139,7 +138,7 @@ export class MonitorsService {
 
         try {
           const currentMemory: { current: number } =
-            await this.beholderService.getMemory(symbol, indexKeys.TICKER);
+            await this.memoryService.getMemory(symbol, indexKeys.TICKER);
 
           const newMemory = { previous: {}, current: {} };
           newMemory.previous = currentMemory ? currentMemory.current : ticker;
@@ -509,7 +508,7 @@ export class MonitorsService {
             };
 
             const currentMemory: { current: number } =
-              await this.beholderService.getMemory(book.symbol, indexKeys.BOOK);
+              await this.memoryService.getMemory(book.symbol, indexKeys.BOOK);
 
             const newMemory = { previous: {}, current: {} };
             newMemory.previous = currentMemory ? currentMemory.current : book;

@@ -11,7 +11,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Setting } from '../settings/entities/setting.entity';
 import { SettingsService } from '../settings/settings.service';
 import { symbolsConstants } from './constants';
-import { CreateSymbolDto } from './dto/create-symbol.dto';
 import { UpdateSymbolDto } from './dto/update-symbol.dto';
 import { Symbol } from './entities/symbol.entity';
 

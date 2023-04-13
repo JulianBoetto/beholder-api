@@ -7,6 +7,7 @@ import { SmsModule } from '../sms/sms.module';
 import { TelegramModule } from '../telegram/telegram.module';
 import { OrdersModule } from '../orders/orders.module';
 import { SettingsModule } from '../settings/settings.module';
+import { MemoryModule } from '../memory/memory.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SettingsModule } from '../settings/settings.module';
     TelegramModule,
     OrdersModule,
     SettingsModule,
+    MemoryModule
   ],
   controllers: [BeholderController],
   providers: [BeholderService],

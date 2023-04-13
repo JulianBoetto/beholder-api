@@ -3,24 +3,22 @@ import {
   ExchangeInfo,
   KlinesParams,
   MainClient,
-  NewSpotOrderParams,
-  SpotOrder,
+  NewSpotOrderParams
 } from 'binance';
+import { Logger } from 'winston';
 import { Setting } from '../settings/entities/setting.entity';
 import { SettingsService } from '../settings/settings.service';
 import { User } from '../users/entities/user.entity';
-import { UsersService } from '../users/users.service';
-import { tryFiatConversion } from '../utils/fiatConversion';
 import { toKlineInterval } from '../utils/types/klineIntervalTypes';
 import { toOrderType } from '../utils/types/orderTypes';
 import { BinanceWS } from '../utils/webSocket';
-import { Logger } from 'winston';
+import { ConverterService } from '../converter/converter.service';
 
 @Injectable()
 export class ExchangeService {
   constructor(
-    private readonly usersService: UsersService,
     private readonly settingsService: SettingsService,
+    private readonly converterService: ConverterService
   ) {}
   @Inject('winston') private logger: Logger;
 
@@ -94,7 +92,8 @@ export class ExchangeService {
 
   async getFullBalance(fiat: string, id: number) {
     try {
-      // const info = await this.loadBalance(id, fiat);
+      const settings: Setting = await this.settingsService.getSettingsDecrypted(id);
+      const info = await this.loadBalance(settings, fiat);
       //     const averages = await ordersRepository.getAveragePrices();
       //     const symbols = await symbolsRepository.getManySymbols(averages.map(a => a.symbol));
       //     let symbolsObj = {};
@@ -118,7 +117,7 @@ export class ExchangeService {
       //     const coins = [...new Set(averages.map(a => a.symbol))];
       //     coins.map(coin => info[coin].avg = grouped[coin].net / grouped[coin].qty);
       //     res.json(info);
-      // return info;
+      return info;
     } catch (err) {
       this.logger.info(err.message);
       return new BadRequestException(err.message);
@@ -150,13 +149,14 @@ export class ExchangeService {
         let available = parseFloat(info.balances[index].free);
 
         if (available > 0)
-          available = tryFiatConversion(coin.asset, available, fiat);
+          available = await this.converterService.tryFiatConversion(coin.asset, available, fiat);
 
         let onOrder = parseFloat(info.balances[index].locked);
-        if (onOrder > 0) onOrder = tryFiatConversion(coin, onOrder, fiat);
+        if (onOrder > 0) onOrder = await this.converterService.tryFiatConversion(coin, onOrder, fiat);
 
         info.balances[index].fiatEstimate = available + onOrder;
         total += available + onOrder;
+
       }),
     );
 

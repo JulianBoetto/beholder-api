@@ -15,7 +15,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { AuthRequest } from 'src/auth/models/AuthRequest';
+import { AuthRequest } from '../auth/models/AuthRequest';
 
 @ApiBearerAuth('token')
 @ApiTags('Orders')

@@ -8,6 +8,7 @@ import { ExchangeModule } from '../exchange/exchange.module';
 import { BeholderModule } from '../beholder/beholder.module';
 import { OrdersModule } from '../orders/orders.module';
 import { IndicatorsModule } from '../indicators/indicators.module';
+import { MemoryModule } from '../memory/memory.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { IndicatorsModule } from '../indicators/indicators.module';
     BeholderModule,
     OrdersModule,
     IndicatorsModule,
+    MemoryModule
   ],
   controllers: [MonitorsController],
   providers: [MonitorsService],

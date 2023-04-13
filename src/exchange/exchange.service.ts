@@ -1,24 +1,27 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
+  AccountInformation,
   ExchangeInfo,
   KlinesParams,
   MainClient,
-  NewSpotOrderParams
+  NewSpotOrderParams,
+  SymbolOrderBookTicker,
 } from 'binance';
 import { Logger } from 'winston';
+import { ConverterService } from '../converter/converter.service';
 import { Setting } from '../settings/entities/setting.entity';
 import { SettingsService } from '../settings/settings.service';
 import { User } from '../users/entities/user.entity';
 import { toKlineInterval } from '../utils/types/klineIntervalTypes';
 import { toOrderType } from '../utils/types/orderTypes';
 import { BinanceWS } from '../utils/webSocket';
-import { ConverterService } from '../converter/converter.service';
+import { AccountInformationDto } from './dto/account-information.dto';
 
 @Injectable()
 export class ExchangeService {
   constructor(
     private readonly settingsService: SettingsService,
-    private readonly converterService: ConverterService
+    private readonly converterService: ConverterService,
   ) {}
   @Inject('winston') private logger: Logger;
 
@@ -33,11 +36,14 @@ export class ExchangeService {
   }
 
   async exchangeInfo(settings: Setting) {
-    const result: ExchangeInfo = await this.client(settings).getExchangeInfo();
-    if(!result) {
-      // this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);      
+    try {
+      const result: ExchangeInfo = await this.client(
+        settings,
+      ).getExchangeInfo();
+      return result;
+    } catch (err) {
+      this.logger.info(`getExchangeInfo error: ${err.body ? err.body : err}`);
     }
-    return result;
   }
 
   async orderBuy(
@@ -81,20 +87,25 @@ export class ExchangeService {
   }
 
   async getBalance(fiat: string, id: number) {
-    //   try {
-    //     const info = await this.loadBalance(id, fiat);
-    //     return info;
-    //   } catch (err) {
-    //     console.error(err.response ? err.response.data : err);
-    //     // res.status(500).send(err.response ? err.response.data : err);
-    //   }
+    try {
+      const settings: Setting = await this.settingsService.getSettingsDecrypted(
+        id,
+      );
+      const info = await this.loadBalance(settings, fiat);
+      return info;
+    } catch (err) {
+      console.error(err.response ? err.response.data : err);
+      this.logger.info(err.response ? err.response.data : err);
+    }
   }
 
   async getFullBalance(fiat: string, id: number) {
     try {
-      const settings: Setting = await this.settingsService.getSettingsDecrypted(id);
+      const settings: Setting = await this.settingsService.getSettingsDecrypted(
+        id,
+      );
       const info = await this.loadBalance(settings, fiat);
-      //     const averages = await ordersRepository.getAveragePrices();
+      // const averages = await this.ordersService.getAveragePrices();
       //     const symbols = await symbolsRepository.getManySymbols(averages.map(a => a.symbol));
       //     let symbolsObj = {};
       //     for (let i = 0; i < symbols.length; i++) {
@@ -139,24 +150,36 @@ export class ExchangeService {
   }
 
   async loadBalance(settings: Setting, fiat: string) {
-    const info: any = await this.balance(settings);
+    if (fiat) fiat = fiat.toUpperCase();
 
+    const info = await this.balance(settings);
+
+    // All coins
     const coins = info.balances;
 
     let total = 0;
     await Promise.all(
       coins.map(async (coin: any, index: number) => {
-        let available = parseFloat(info.balances[index].free);
+        // Total available by coin
+        let available = parseFloat(`${coins[index].free}`);
 
         if (available > 0)
-          available = await this.converterService.tryFiatConversion(coin.asset, available, fiat);
+          available = await this.converterService.tryFiatConversion(
+            coin.asset,
+            available,
+            fiat,
+          );
 
-        let onOrder = parseFloat(info.balances[index].locked);
-        if (onOrder > 0) onOrder = await this.converterService.tryFiatConversion(coin, onOrder, fiat);
+        let onOrder = parseFloat(`${coins[index].locked}`);
+        if (onOrder > 0)
+          onOrder = await this.converterService.tryFiatConversion(
+            coin,
+            onOrder,
+            fiat,
+          );
 
         info.balances[index].fiatEstimate = available + onOrder;
         total += available + onOrder;
-
       }),
     );
 
@@ -171,8 +194,10 @@ export class ExchangeService {
 
   async balance(settings: Setting) {
     try {
-      const balance = await this.client(settings).getAccountInformation();
-      return balance;
+      const balance: AccountInformation = await this.client(
+        settings,
+      ).getAccountInformation();
+      return new AccountInformationDto(balance);
     } catch (err) {
       console.log(err);
       this.logger.info(
@@ -181,6 +206,14 @@ export class ExchangeService {
         }`,
       );
     }
+  }
+
+  async SymbolBookTicker(setting: Setting, symbol: string) {
+    const params = {
+      symbol,
+    };
+    const result = await this.client(setting).getSymbolOrderBookTicker(params);
+    return result;
   }
 
   userDataStream(settings: Setting, callback) {

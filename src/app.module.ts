@@ -24,6 +24,7 @@ import { SmsService } from './sms/sms.service';
 import { SmsModule } from './sms/sms.module';
 import { OrderTemplatesModule } from './order-templates/order-templates.module';
 import { MemoryModule } from './memory/memory.module';
+import { AveragePricesModule } from './average-prices/average-prices.module';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { MemoryModule } from './memory/memory.module';
     SmsModule,
     TelegramModule,
     OrderTemplatesModule,
-    MemoryModule
+    MemoryModule,
+    AveragePricesModule
   ],
   controllers: [AppController],
   providers: [

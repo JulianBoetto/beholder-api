@@ -108,7 +108,6 @@ export class OrdersService {
     return this.prisma.order.findMany({ where: { id: { in: ids } } });
   }
 
-
   private async calcQuoteQty(orderTemplate: OrderTemplate, symbol: Symbol) {
     if (orderTemplate.type !== 'MARKET' || parseFloat(orderTemplate.quantity)) {
       this.logger.info(
@@ -144,6 +143,27 @@ export class OrdersService {
     return;
   }
 
+  async getAveragePrices() {
+    // const result = await this.prisma.order.findMany({
+    //   where: {
+    //     AND: [
+    //       { side: 'BUY' },
+    //       { status: 'FILLED' },
+    //       { net: { gt: "0" } },
+    //     ],
+    //   },
+    // });
+
+    // return result.map(r => {
+    //     return {
+    //         symbol: r.symbol,
+    //         net: parseFloat(r.net),
+    //         qty: parseFloat(r.qty),
+    //         avg: parseFloat(r.net) / parseFloat(r.qty)
+    //     }
+    // })
+  }
+
   // Routes
   getLastOrders() {
     // return the last orders
@@ -172,9 +192,7 @@ export class OrdersService {
     // sync the order with the given id
   }
 
-  newOrder(id: number, order: Order) {
-    
-  }
+  newOrder(id: number, order: Order) {}
 
   async placeOrder(settings: User, automation: Automation, action: Action) {
     if (!settings || !automation || !action) {

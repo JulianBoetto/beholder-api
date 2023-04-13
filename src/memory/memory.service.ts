@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 export class MemoryService {
     MEMORY: object = {};
 
-    async getMemory(symbol: string, index: string, interval?: string) {
+    getMemory(symbol: string, index: string, interval?: string) {
         if (symbol && index) {
           const indexKey = interval ? `${index}_${interval}` : index;
           const memoryKey = `${symbol}:${indexKey}`;

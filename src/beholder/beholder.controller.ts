@@ -1,8 +1,9 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -30,20 +31,21 @@ export class BeholderController {
     return this.beholderService.getMemoryIndexes();
   }
 
+  @Get('/memory/:symbol?/:index?/:interval?')
   @ApiOperation({
     summary: 'Get the memory of a symbol in a specific index and interval',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'symbol',
     required: false,
     description: 'The symbol of the memory to retrieve.',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'index',
     required: false,
     description: 'The index of the memory to retrieve.',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'interval',
     required: false,
     description: 'The interval of the memory to retrieve.',
@@ -53,9 +55,9 @@ export class BeholderController {
     type: Object,
   })
   getMemory(
-    @Query('symbol') symbol: string,
-    @Query('index') index: string,
-    @Query('interval') interval: string,
+    @Param('symbol') symbol?: string,
+    @Param('index') index?: string,
+    @Param('interval') interval?: string,
   ) {
     return this.memoryService.getMemory(symbol, index, interval);
   }

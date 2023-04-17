@@ -3,9 +3,10 @@ import { SettingsModule } from '../settings/settings.module';
 import { ExchangeController } from './exchange.controller';
 import { ExchangeService } from './exchange.service';
 import { ConverterModule } from '../converter/converter.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [SettingsModule, ConverterModule],
+  imports: [SettingsModule, ConverterModule, PrismaModule],
   providers: [ExchangeService],
   exports: [ExchangeService],
   controllers: [ExchangeController],

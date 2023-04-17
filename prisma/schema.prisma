@@ -43,7 +43,7 @@ model Symbol {
   updatedAt      DateTime @updatedAt
 }
 
-model Order {
+model OrderCoin {
   id            Int         @id @default(autoincrement())
   automationId  Int?
   symbol        String
@@ -56,9 +56,9 @@ model Order {
   isMaker       Boolean?
   limitPrice    String?
   stopPrice     String?
-  avgPrice      String?
+  avgPrice      Decimal? @db.Decimal(10,2)
   commission    String?
-  net           String?
+  net           Decimal? @db.Decimal(10,2)
   quantity      String
   icebergQty    String?
   obs           String?
@@ -81,7 +81,7 @@ model Automation {
   logs       Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  order      Order[]
+  order      OrderCoin[]
   action     Action[]
   grid       Grid[]
 

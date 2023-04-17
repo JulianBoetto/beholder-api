@@ -1,5 +1,6 @@
 import { OrderFill, OrderTimeInForce, OrderType } from 'binance';
 import { Order } from '../../orders/entities/order.entity';
+import { Decimal } from '@prisma/client/runtime';
 
 export interface PlaceOrderType {
   symbol: string;
@@ -20,8 +21,8 @@ export interface FormatedOrder {
   status?: string;
   limitPrice?: number;
   stopPrice?: number;
-  avgPrice?: number;
-  net?: number;
+  avgPrice?: Decimal;
+  net?: Decimal;
   quantity?: number;
   icebergQty?: number;
 }
@@ -34,8 +35,8 @@ export function getLightLastOrder(order: Order) {
     status: order.status,
     limitPrice: order.limitPrice ? parseFloat(order.limitPrice) : null,
     stopPrice: order.stopPrice ? parseFloat(order.stopPrice) : null,
-    avgPrice: order.avgPrice ? parseFloat(order.avgPrice) : null,
-    net: order.net ? parseFloat(order.net) : null,
+    avgPrice: order.avgPrice ? order.avgPrice : null,
+    net: order.net ? order.net : null,
     quantity: order.quantity ? parseFloat(order.quantity) : null,
     icebergQty: order.icebergQty ? parseFloat(order.icebergQty) : null,
   };

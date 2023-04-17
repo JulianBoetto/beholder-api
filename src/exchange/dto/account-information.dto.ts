@@ -4,18 +4,20 @@ export interface SpotAssetBalance {
   asset: string;
   free: numberInString;
   locked: numberInString;
+  fiatEstimate?: number;
 }
 
 export class SpotAssetBalanceDto {
-    asset: string;
-    free: number;
-    locked: number;
-    fiatEstimate?: number;
+  asset: string;
+  free: number;
+  locked: number;
+  fiatEstimate: number ;
 
   constructor(spotAssetBalance: SpotAssetBalance) {
     this.asset = spotAssetBalance.asset;
     this.free = parseFloat(`${spotAssetBalance.free}`);
     this.locked = parseFloat(`${spotAssetBalance.locked}`);
+    this.fiatEstimate = spotAssetBalance.fiatEstimate;
   }
 }
 
@@ -48,18 +50,43 @@ export class AccountInformationDto {
   fiatEstimate?: string;
 
   constructor(accountInformation: AccountInformation) {
-    this.makerCommission = accountInformation.makerCommission;
-    this.takerCommission = accountInformation.takerCommission;
-    this.buyerCommission = accountInformation.buyerCommission;
-    this.sellerCommission = accountInformation.sellerCommission;
-    this.canTrade = accountInformation.canTrade;
-    this.canWithdraw = accountInformation.canWithdraw;
-    this.canDeposit = accountInformation.canDeposit;
-    this.updateTime = accountInformation.updateTime;
-    this.accountType = accountInformation.accountType;
+    delete this.makerCommission;
+    delete this.takerCommission;
+    delete this.buyerCommission;
+    delete this.sellerCommission;
+    delete this.canTrade;
+    delete this.canWithdraw;
+    delete this.canDeposit;
+    delete this.updateTime;
+    delete this.accountType;
     this.balances = accountInformation.balances.map(
       (balance) => new SpotAssetBalanceDto(balance),
     );
-    this.permissions = accountInformation.permissions;
+    delete this.permissions;
+  }
+}
+
+export class BalanceDto {
+  asset: string;
+  available: string;
+  onOrder: string;
+  fiatEstimate: number;
+  avg?: number;
+
+  constructor(asset: string, available: string, onOrder: string, fiatEstimate: number) {
+    this.asset = asset;
+    this.available = available;
+    this.onOrder = onOrder;
+    this.fiatEstimate = fiatEstimate;
+  }
+}
+
+export class BalancesDto {
+  assets: { [key: string]: BalanceDto };
+  fiatEstimate: string;
+
+  constructor(assets: { [key: string]: BalanceDto }, fiatEstimate: string) {
+    this.assets = assets;
+    this.fiatEstimate = fiatEstimate;
   }
 }

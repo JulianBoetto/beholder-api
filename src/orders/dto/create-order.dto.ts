@@ -3,6 +3,7 @@ import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
+  IsDecimal,
   IsNumber,
   IsOptional,
   IsString,
@@ -62,9 +63,9 @@ export class CreateOrderDto {
   stopPrice: string;
 
   @ApiPropertyOptional()
-  @IsString()
   @IsOptional()
-  avgPrice: string;
+  @IsDecimal()
+  avgPrice: number;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -73,8 +74,8 @@ export class CreateOrderDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  net: string;
+  @IsDecimal()
+  net: number;
 
   @ApiProperty()
   @IsString()

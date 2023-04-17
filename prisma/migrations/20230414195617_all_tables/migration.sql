@@ -42,7 +42,7 @@ CREATE TABLE `Symbol` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Order` (
+CREATE TABLE `OrderCoin` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `automationId` INTEGER NULL,
     `symbol` VARCHAR(191) NOT NULL,
@@ -55,17 +55,17 @@ CREATE TABLE `Order` (
     `isMaker` BOOLEAN NULL,
     `limitPrice` VARCHAR(191) NULL,
     `stopPrice` VARCHAR(191) NULL,
-    `avgPrice` VARCHAR(191) NULL,
+    `avgPrice` DECIMAL(10, 2) NULL,
     `commission` VARCHAR(191) NULL,
-    `net` VARCHAR(191) NULL,
+    `net` DECIMAL(10, 2) NULL,
     `quantity` VARCHAR(191) NOT NULL,
     `icebergQty` VARCHAR(191) NULL,
     `obs` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    INDEX `Order_symbol_idx`(`symbol`),
-    UNIQUE INDEX `Order_clientOrderId_orderId_key`(`clientOrderId`, `orderId`),
+    INDEX `OrderCoin_symbol_idx`(`symbol`),
+    UNIQUE INDEX `OrderCoin_clientOrderId_orderId_key`(`clientOrderId`, `orderId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -170,7 +170,7 @@ CREATE TABLE `Monitor` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `Order` ADD CONSTRAINT `Order_automationId_fkey` FOREIGN KEY (`automationId`) REFERENCES `Automation`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `OrderCoin` ADD CONSTRAINT `OrderCoin_automationId_fkey` FOREIGN KEY (`automationId`) REFERENCES `Automation`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Action` ADD CONSTRAINT `Action_orderTemplateId_fkey` FOREIGN KEY (`orderTemplateId`) REFERENCES `OrderTemplate`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

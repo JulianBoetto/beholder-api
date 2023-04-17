@@ -15,13 +15,23 @@ import { User } from '../users/entities/user.entity';
 import { toKlineInterval } from '../utils/types/klineIntervalTypes';
 import { toOrderType } from '../utils/types/orderTypes';
 import { BinanceWS } from '../utils/webSocket';
-import { AccountInformationDto } from './dto/account-information.dto';
+import {
+  AccountInformationDto,
+  BalanceDto,
+  BalancesDto,
+} from './dto/account-information.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+import { orderStatus } from 'src/utils/orderTypes';
+import { Order } from 'src/orders/entities/order.entity';
+import { AveragesPricesDTO } from './dto/averages-prices.dto';
 
 @Injectable()
 export class ExchangeService {
   constructor(
     private readonly settingsService: SettingsService,
     private readonly converterService: ConverterService,
+    private readonly prisma: PrismaService,
   ) {}
   @Inject('winston') private logger: Logger;
 
@@ -86,6 +96,28 @@ export class ExchangeService {
     return await this.client(settings).submitNewOrder(params); // submitNewOrder(params);
   }
 
+  async getAveragePrices() {
+    const result: AveragesPricesDTO[] = await this.prisma.$queryRaw`
+      SELECT 
+        MAX(symbol) AS symbol, SUM(net) AS net, SUM(quantity) AS quantity 
+      FROM 
+        OrderCoin 
+      WHERE 
+        side = 'BUY' AND status = 'FILLED' AND net > 0 
+      GROUP BY 
+        symbol;
+    `;
+
+    return result.map((r) => {
+      return {
+        symbol: r.symbol,
+        net: r.net,
+        qty: r.quantity,
+        avg: r.net / r.quantity,
+      };
+    });
+  }
+
   async getBalance(fiat: string, id: number) {
     try {
       const settings: Setting = await this.settingsService.getSettingsDecrypted(
@@ -105,29 +137,40 @@ export class ExchangeService {
         id,
       );
       const info = await this.loadBalance(settings, fiat);
-      // const averages = await this.ordersService.getAveragePrices();
-      //     const symbols = await symbolsRepository.getManySymbols(averages.map(a => a.symbol));
-      //     let symbolsObj = {};
-      //     for (let i = 0; i < symbols.length; i++) {
-      //         const symbol = symbols[i];
-      //         symbolsObj[symbol.symbol] = { base: symbol.base, quote: symbol.quote };
-      //     }
-      //     const grouped = {};
-      //     for (let i = 0; i < averages.length; i++) {
-      //         const averageObj = averages[i];
-      //         const symbol = symbolsObj[averageObj.symbol];
-      //         if (symbol.quote !== fiat) {
-      //             averageObj.avg = beholder.tryFiatConversion(symbol.quote, parseFloat(averageObj.avg), fiat);
-      //             averageObj.net = beholder.tryFiatConversion(symbol.quote, parseFloat(averageObj.net), fiat);
-      //         }
-      //         averageObj.symbol = symbol.base;
-      //         if (!grouped[symbol.base]) grouped[symbol.base] = { net: 0, qty: 0 };
-      //         grouped[symbol.base].net += averageObj.net;
-      //         grouped[symbol.base].qty += averageObj.qty;
-      //     }
-      //     const coins = [...new Set(averages.map(a => a.symbol))];
-      //     coins.map(coin => info[coin].avg = grouped[coin].net / grouped[coin].qty);
-      //     res.json(info);
+      const averages = await this.getAveragePrices();
+      const symbols = await this.prisma.symbol.findMany({
+        where: { symbol: { in: averages.map((a) => a.symbol) } },
+      });
+      let symbolsObj = {};
+      for (let i = 0; i < symbols.length; i++) {
+        const symbol = symbols[i];
+        symbolsObj[symbol.symbol] = { base: symbol.base, quote: symbol.quote };
+      }
+      const grouped = {};
+      for (let i = 0; i < averages.length; i++) {
+        const averageObj = averages[i];
+        const symbol = symbolsObj[averageObj.symbol];
+        if (symbol.quote !== fiat) {
+          averageObj.avg = await this.converterService.tryFiatConversion(
+            symbol.quote,
+            averageObj.avg,
+            fiat,
+          );
+          averageObj.net = await this.converterService.tryFiatConversion(
+            symbol.quote,
+            averageObj.net,
+            fiat,
+          );
+        }
+        averageObj.symbol = symbol.base;
+        if (!grouped[symbol.base]) grouped[symbol.base] = { net: 0, qty: 0 };
+        grouped[symbol.base].net += averageObj.net;
+        grouped[symbol.base].qty += averageObj.qty;
+      }
+      const coins = [...new Set(averages.map((a) => a.symbol))];
+      coins.map(
+        (coin) => (info.assets[coin].avg = Math.abs(grouped[coin].net / grouped[coin].qty)),
+      );
       return info;
     } catch (err) {
       this.logger.info(err.message);
@@ -156,9 +199,10 @@ export class ExchangeService {
 
     // All coins
     const coins = info.balances;
+    // const balance: InfoDTO = [];
 
     let total = 0;
-    await Promise.all(
+    const balances = await Promise.all(
       coins.map(async (coin: any, index: number) => {
         // Total available by coin
         let available = parseFloat(`${coins[index].free}`);
@@ -178,13 +222,29 @@ export class ExchangeService {
             fiat,
           );
 
-        info.balances[index].fiatEstimate = available + onOrder;
-        total += available + onOrder;
+        const fiatEstimate = available + onOrder;
+        total += fiatEstimate;
+
+        return new BalanceDto(
+          coin.asset,
+          available.toFixed(8),
+          onOrder.toFixed(8),
+          fiatEstimate || 0,
+        );
       }),
     );
 
-    info.fiatEstimate = `~${fiat} ${total.toFixed(2)}`;
-    return info;
+    const fiatEstimate = `~${fiat.toUpperCase()} ${total.toFixed(2)}`;
+
+    const balancesDto = new BalancesDto(
+      balances.reduce((acc, curr) => {
+        acc[curr.asset] = curr;
+        return acc;
+      }, {}),
+      fiatEstimate,
+    );
+
+    return balancesDto;
   }
 
   async miniTickerStream(settings: Setting, callback) {

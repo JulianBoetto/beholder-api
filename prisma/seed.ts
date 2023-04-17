@@ -252,6 +252,64 @@ async function main() {
   console.log('Monitor USER_DATA: ', { userDataMonitor });
   console.log('Monitor CANDLES: ', { candlesMonitor });
   console.log('Monitor TICKER: ', { tickerMonitor });
+
+  const order = await prisma.orderCoin.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      automationId: 2,
+      symbol: 'BTCUSDT',
+      orderId: 21000131,
+      clientOrderId: 'x-U5D79M5BdZwvPnzqlKnnf91V0ATkEZrAF',
+      transactTime: 1680141433232,
+      type: 'MARKET',
+      side: 'BUY',
+      status: 'FILLED',
+      quantity: '0.00035200',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+
+  const order2 = await prisma.orderCoin.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      automationId: 1,
+      symbol: 'BTCUSDT',
+      orderId: 21000133,
+      clientOrderId: 'x-U5D79M5BdZwvPnzqlKnnf91V0ATkEZrAF',
+      transactTime: 1680141433245,
+      type: 'MARKET',
+      net: 0.02,
+      side: 'BUY',
+      status: 'FILLED',
+      quantity: '0.00035200',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+
+  const order3 = await prisma.orderCoin.upsert({
+    where: { id: 3 },
+    update: {},
+    create: {
+      automationId: 2,
+      symbol: 'ETHUSDT',
+      orderId: 21140131,
+      clientOrderId: 'x-U5D79M5BdZwvPnzqlKnnf91V0ATkEZrAF',
+      transactTime: 1680141433263,
+      type: 'MARKET',
+      side: 'BUY',
+      status: 'FILLED',
+      quantity: '0.00040200',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+  console.log('Order: ', { order });
+  console.log('Order 2: ', { order2 });
+  console.log('Order 3: ', { order3 });
 }
 
 main()

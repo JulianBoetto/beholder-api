@@ -6,7 +6,6 @@ import { OrderTemplate } from '../order-templates/entities/orderTemplate';
 import { OrderTemplatesService } from '../order-templates/order-templates.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { Symbol } from '../symbols/entities/symbol.entity';
-import { SymbolsService } from '../symbols/symbols.service';
 import { User } from '../users/entities/user.entity';
 import { orderStatus, orderTypes } from '../utils/orderTypes';
 import {
@@ -24,7 +23,6 @@ export class OrdersService {
     @Inject('winston') private logger: Logger,
     private readonly prisma: PrismaService,
     private orderTemplatesService: OrderTemplatesService,
-    private symbolsService: SymbolsService,
     private exchangeService: ExchangeService,
   ) {}
 
@@ -89,12 +87,12 @@ export class OrdersService {
     )
       currentOrder.net = newOrder.net;
 
-    // await this.prisma.order.update(currentOrder);
+    // await this.prisma.orderCoin.update(currentOrder);
     return currentOrder;
   }
 
   async getLastFilledOrders() {
-    const idObjects = await this.prisma.order.groupBy({
+    const idObjects = await this.prisma.orderCoin.groupBy({
       by: ['symbol'],
       where: {
         status: orderStatus.FILLED,
@@ -105,7 +103,7 @@ export class OrdersService {
     });
     let ids: number[] = idObjects.map((o) => o._max.id);
 
-    return this.prisma.order.findMany({ where: { id: { in: ids } } });
+    return this.prisma.orderCoin.findMany({ where: { id: { in: ids } } });
   }
 
   private async calcQuoteQty(orderTemplate: OrderTemplate, symbol: Symbol) {
@@ -143,27 +141,6 @@ export class OrdersService {
     return;
   }
 
-  async getAveragePrices() {
-    // const result = await this.prisma.order.findMany({
-    //   where: {
-    //     AND: [
-    //       { side: 'BUY' },
-    //       { status: 'FILLED' },
-    //       { net: { gt: "0" } },
-    //     ],
-    //   },
-    // });
-
-    // return result.map(r => {
-    //     return {
-    //         symbol: r.symbol,
-    //         net: parseFloat(r.net),
-    //         qty: parseFloat(r.qty),
-    //         avg: parseFloat(r.net) / parseFloat(r.qty)
-    //     }
-    // })
-  }
-
   // Routes
   getLastOrders() {
     // return the last orders
@@ -174,7 +151,7 @@ export class OrdersService {
   }
 
   async getOrder(orderId: number, clientOrderId: number) {
-    const order = await this.prisma.order.findMany({
+    const order = await this.prisma.orderCoin.findMany({
       where: { orderId },
       // where: { orderId, clientOrderId },
       include: {
@@ -226,9 +203,11 @@ export class OrdersService {
       orderTemplate.stopPrice = null;
     }
 
-    const symbol: Symbol = await this.symbolsService.getSymbol(
-      orderTemplate.symbol,
-    );
+    const symbol: Symbol = await this.prisma.symbol.findUnique({
+      where: {
+        symbol: orderTemplate.symbol,
+      },
+    });
 
     const order: PlaceOrderType = {
       symbol: orderTemplate.symbol.toUpperCase(),
@@ -303,7 +282,7 @@ export class OrdersService {
       };
     }
 
-    const savedOrder = await this.prisma.order.create({
+    const savedOrder = await this.prisma.orderCoin.create({
       data: {
         automationId: automation.id,
         symbol: order.symbol,

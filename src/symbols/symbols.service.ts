@@ -4,7 +4,7 @@ import {
   SymbolExchangeInfo,
   SymbolLotSizeFilter,
   SymbolMinNotionalFilter,
-  SymbolPriceFilter
+  SymbolPriceFilter,
 } from 'binance';
 import { ExchangeService } from '../exchange/exchange.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -34,7 +34,7 @@ export class SymbolsService {
         quote,
         onlyFavorites === 'true',
         page,
-      )
+      );
     else return await this.getAllSymbols();
   }
 
@@ -170,5 +170,11 @@ export class SymbolsService {
     }
 
     return symbols;
+  }
+
+  async getManySymbols(symbolsIds: []) {
+    return this.prisma.symbol.findMany({
+      where: { symbol: { in: symbolsIds } },
+    });
   }
 }

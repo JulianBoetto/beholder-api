@@ -1,3 +1,5 @@
+import { Decimal } from "@prisma/client/runtime";
+
 export class Order {
   id: number;
   automationId?: number;
@@ -11,9 +13,9 @@ export class Order {
   isMaker?: boolean;
   limitPrice?: string;
   stopPrice?: string;
-  avgPrice?: string;
+  avgPrice?: Decimal;
   commission?: string;
-  net?: string;
+  net?: Decimal;
   quantity?: string;
   icebergQty?: string;
   obs?: string;

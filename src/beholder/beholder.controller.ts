@@ -1,15 +1,14 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiResponse,
-  ApiTags,
+  ApiTags
 } from '@nestjs/swagger';
+import { MemoryService } from '../memory/memory.service';
 import { BeholderService } from './beholder.service';
-import { MemoryService } from 'src/memory/memory.service';
 
 @ApiBearerAuth('token')
 @ApiTags('Beholder')

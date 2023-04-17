@@ -5,8 +5,8 @@ import { MemoryService } from '../memory/memory.service';
 export class ConverterService {
   constructor(private readonly memoryService: MemoryService) {}
 
-  private FIAT_COINS = process.env.FIAT_COINS.split(',');
-  private DOLLAR_COINS = process.env.DOLLAR_COINS.split(',');
+  private FIAT_COINS = process.env.FIAT_COINS ?? process.env.FIAT_COINS.split(',');
+  private DOLLAR_COINS = process.env.DOLLAR_COINS.split(',') ?? process.env.DOLLAR_COINS.split(',');
 
   async tryFiatConversion(baseAsset: string, baseQty: number, fiat: string) {
     try {

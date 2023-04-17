@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { ExchangeModule } from '../src/exchange/exchange.module';
+import { BalancesDto } from '../src/exchange/dto/account-information.dto';
 
 describe('Exchange service', () => {
   let app: INestApplication;
@@ -35,31 +36,24 @@ describe('Exchange service', () => {
         })
         .expect(200);
 
-      const { body } = response;
-      console.log(body)
-      // for (let i = 0; i < body; i++) {
-      //   if (i > 3) break;
-      //   const symbol = body[i];
-      //   expect(symbol).toHaveProperty('basePrecision');
-      //   expect(symbol).toHaveProperty('quotePrecision');
-      //   expect(symbol).toHaveProperty('base');
-      //   expect(symbol).toHaveProperty('quote');
-      //   expect(symbol).toHaveProperty('stepSize');
-      //   expect(symbol).toHaveProperty('tickSize');
-      //   expect(symbol).toHaveProperty('minNotional');
-      //   expect(symbol).toHaveProperty('minLotSize');
-      //   expect(symbol).toHaveProperty('isFavorite');
-      //   expect(symbol.symbol).toMatch(/[A-Z]+/);
-      //   expect(symbol.basePrecision).toBeGreaterThan(0);
-      //   expect(symbol.quotePrecision).toBeGreaterThan(0);
-      //   expect(symbol.base).toMatch(/[A-Z]+/);
-      //   expect(symbol.quote).toMatch(/[A-Z]+/);
-      //   expect(symbol.stepSize).toMatch(/^\d+\.\d+$/);
-      //   expect(symbol.tickSize).toMatch(/^\d+\.\d+$/);
-      //   expect(symbol.minNotional).toMatch(/^\d+\.\d+$/);
-      //   expect(symbol.minLotSize).toMatch(/^\d+\.\d+$/);
-      //   expect(typeof symbol.isFavorite).toBe('boolean');
-      // }
+      const balancesDto = new BalancesDto(
+        response.body.assets,
+        response.body.fiatEstimate,
+      );
+      expect(balancesDto).toBeInstanceOf(BalancesDto);
+      
+      const assets: BalancesDto = response.body.assets;
+      expect(assets).toBeDefined();
+
+      Object.values(assets).forEach((asset) => {
+        expect(asset).toBeDefined();
+        expect(asset.asset).toBeDefined();
+        expect(asset.available).toBeDefined();
+        expect(asset.onOrder).toBeDefined();
+        expect(asset.fiatEstimate).toBeDefined();
+      });
+
+      expect(response.body.fiatEstimate).toBeDefined();
     });
 
     // it('GET Symbol by id', async () => {

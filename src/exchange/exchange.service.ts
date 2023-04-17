@@ -4,11 +4,11 @@ import {
   ExchangeInfo,
   KlinesParams,
   MainClient,
-  NewSpotOrderParams,
-  SymbolOrderBookTicker,
+  NewSpotOrderParams
 } from 'binance';
 import { Logger } from 'winston';
 import { ConverterService } from '../converter/converter.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { Setting } from '../settings/entities/setting.entity';
 import { SettingsService } from '../settings/settings.service';
 import { User } from '../users/entities/user.entity';
@@ -20,10 +20,6 @@ import {
   BalanceDto,
   BalancesDto,
 } from './dto/account-information.dto';
-import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
-import { orderStatus } from 'src/utils/orderTypes';
-import { Order } from 'src/orders/entities/order.entity';
 import { AveragesPricesDTO } from './dto/averages-prices.dto';
 
 @Injectable()
@@ -199,7 +195,6 @@ export class ExchangeService {
 
     // All coins
     const coins = info.balances;
-    // const balance: InfoDTO = [];
 
     let total = 0;
     const balances = await Promise.all(
